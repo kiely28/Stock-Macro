@@ -222,3 +222,63 @@ ActiveWindow.Zoom = 70 ' Set zoom level to 70%
 
 ' === Step 10: Save Workbook ===
 ThisWorkbook.Save
+
+
+
+Sub CreatePivot_PlantAsRow_OthersAsValues()
+    Dim wsData As Worksheet, wsPivot As Worksheet
+    Dim ptCache As PivotCache, pt As PivotTable
+    Dim dataRange As Range
+    Dim lastRow As Long, lastCol As Long
+    Dim colNumbers As Variant
+    Dim headers() As String
+    Dim i As Long
+
+    ' Source data sheet
+    Set wsData = ThisWorkbook.Sheets("Sheet1")
+    
+    ' Column numbers: 2 is "Plant" (Row), others are Values
+    colNumbers = Array(2, 9, 10, 11, 12, 13, 14, 16, 17, 15, 18)
+
+    ' Convert column numbers to header names
+    ReDim headers(LBound(colNumbers) To UBound(colNumbers))
+    For i = LBound(colNumbers) To UBound(colNumbers)
+        headers(i) = wsData.Cells(1, colNumbers(i)).Value
+    Next i
+
+    ' Get last row and last column
+    lastRow = wsData.Cells(wsData.Rows.Count, "A").End(xlUp).Row
+    lastCol = wsData.Cells(1, wsData.Columns.Count).End(xlToLeft).Column
+    Set dataRange = wsData.Range(wsData.Cells(1, 1), wsData.Cells(lastRow, lastCol))
+
+    ' Delete old PivotOutput if exists
+    Application.DisplayAlerts = False
+    On Error Resume Next
+    ThisWorkbook.Sheets("PivotOutput").Delete
+    On Error GoTo 0
+    Application.DisplayAlerts = True
+
+    ' Add new sheet for Pivot Table
+    Set wsPivot = ThisWorkbook.Sheets.Add
+    wsPivot.Name = "PivotOutput"
+
+    ' Create pivot cache and table
+    Set ptCache = ThisWorkbook.PivotCaches.Create(xlDatabase, dataRange)
+    Set pt = ptCache.CreatePivotTable(wsPivot.Range("A3"), "CustomPivot")
+
+    ' Set "Plant" as Row Label (first header)
+    pt.PivotFields(headers(0)).Orientation = xlRowField
+    pt.PivotFields(headers(0)).Position = 1
+
+    ' Add remaining columns as Values (Sum)
+    For i = 1 To UBound(headers)
+        On Error Resume Next
+        pt.AddDataField pt.PivotFields(headers(i)), "Sum of " & headers(i), xlSum
+        On Error GoTo 0
+    Next i
+
+    ' Format output
+    wsPivot.Columns.AutoFit
+    MsgBox "Pivot Table created with 'Plant' as Row and custom Values order!", vbInformation
+End Sub
+

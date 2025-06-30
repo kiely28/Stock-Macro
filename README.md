@@ -282,3 +282,98 @@ Sub CreatePivot_PlantAsRow_OthersAsValues()
     MsgBox "Pivot Table created with 'Plant' as Row and custom Values order!", vbInformation
 End Sub
 
+
+
+
+---
+
+✅ 1. Put all the macros in a Standard Module
+
+1. Press ALT + F11 to open the VBA editor.
+
+
+2. In the Project Explorer, right-click on any existing object (like VBAProject (YourWorkbookName.xlsm)).
+
+
+3. Choose Insert > Module.
+
+
+4. Paste all the macros (InitButtons, Button1_Click, Button2_Click, Button3_Click) into the module.
+
+
+
+📌 Example:
+
+Sub InitButtons()
+    With ActiveSheet.Shapes("Button2")
+        .OnAction = ""
+        .Fill.ForeColor.TintAndShade = 0.8
+    End With
+    With ActiveSheet.Shapes("Button3")
+        .OnAction = ""
+        .Fill.ForeColor.TintAndShade = 0.8
+    End With
+End Sub
+
+Sub Button1_Click()
+    MsgBox "Button 1 clicked. Enabling Button 2."
+    With ActiveSheet.Shapes("Button2")
+        .OnAction = "Button2_Click"
+        .Fill.ForeColor.TintAndShade = 0
+    End With
+End Sub
+
+Sub Button2_Click()
+    MsgBox "Button 2 clicked. Enabling Button 3."
+    With ActiveSheet.Shapes("Button3")
+        .OnAction = "Button3_Click"
+        .Fill.ForeColor.TintAndShade = 0
+    End With
+End Sub
+
+Sub Button3_Click()
+    MsgBox "Button 3 clicked. Final action!"
+End Sub
+
+
+---
+
+✅ 2. Assign the Button1 macro to Shape1
+
+In Excel:
+
+1. Right-click your Shape1 (the first "button").
+
+
+2. Choose Assign Macro.
+
+
+3. Select Button1_Click.
+
+
+
+Repeat for Shape2 and Shape3 (Button2 and Button3), but they won’t work until enabled by code.
+
+
+---
+
+✅ 3. (Optional) Call InitButtons when opening the sheet
+
+If you want the buttons to reset every time the sheet is activated:
+
+🧩 In the Sheet Module:
+
+1. In the VBA editor, double-click Sheet1 (or your sheet name) under Microsoft Excel Objects.
+
+
+2. Paste this code:
+
+
+
+Private Sub Worksheet_Activate()
+    InitButtons
+End Sub
+
+
+---
+

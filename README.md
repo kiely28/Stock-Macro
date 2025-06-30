@@ -377,3 +377,119 @@ End Sub
 
 ---
 
+
+Sub CreatePivot_PlantAsRow_OthersAsValues()
+    Dim wsData As Worksheet, wsPivot As Worksheet
+    Dim ptCache As PivotCache, pt As PivotTable
+    Dim dataRange As Range, copyRange As Range
+    Dim lastRow As Long, lastCol As Long
+    Dim colNumbers As Variant
+    Dim headers() As String
+    Dim i As Long, dataStartRow As Long, dataEndRow As Long
+    Dim pivotTableRange As Range
+
+    Dim wbTemplate As Workbook
+    Dim wsTemplate As Worksheet
+    Dim templatePath As String, savePath As String
+    Dim destStartCell As Range, destEndCell As Range
+    Dim rowCount As Long, colCount As Long
+
+    ' === Step 1: Setup and Create Pivot ===
+
+    Set wsData = ThisWorkbook.Sheets("Sheet1")
+    colNumbers = Array(2, 9, 10, 11, 12, 13, 14, 16, 17, 15, 18)
+
+    ReDim headers(LBound(colNumbers) To UBound(colNumbers))
+    For i = LBound(colNumbers) To UBound(colNumbers)
+        headers(i) = wsData.Cells(1, colNumbers(i)).Value
+    Next i
+
+    lastRow = wsData.Cells(wsData.Rows.Count, "A").End(xlUp).Row
+    lastCol = wsData.Cells(1, wsData.Columns.Count).End(xlToLeft).Column
+    Set dataRange = wsData.Range(wsData.Cells(1, 1), wsData.Cells(lastRow, lastCol))
+
+    Application.DisplayAlerts = False
+    On Error Resume Next
+    ThisWorkbook.Sheets("PivotOutput").Delete
+    On Error GoTo 0
+    Application.DisplayAlerts = True
+
+    Set wsPivot = ThisWorkbook.Sheets.Add
+    wsPivot.Name = "PivotOutput"
+
+    Set ptCache = ThisWorkbook.PivotCaches.Create(xlDatabase, dataRange)
+    Set pt = ptCache.CreatePivotTable(wsPivot.Range("A3"), "CustomPivot")
+
+    pt.PivotFields(headers(0)).Orientation = xlRowField
+    pt.PivotFields(headers(0)).Position = 1
+
+    For i = 1 To UBound(headers)
+        On Error Resume Next
+        pt.AddDataField pt.PivotFields(headers(i)), "Sum of " & headers(i), xlSum
+        On Error GoTo 0
+    Next i
+
+    wsPivot.Columns.AutoFit
+    DoEvents
+
+    ' === Step 2: Copy Pivot Table Data (without header and grand total) ===
+
+    Set pivotTableRange = pt.TableRange1
+
+    If pivotTableRange.Rows.Count > 2 Then
+        dataStartRow = pivotTableRange.Row + 1
+        dataEndRow = pivotTableRange.Row + pivotTableRange.Rows.Count - 2
+
+        Set copyRange = wsPivot.Range(wsPivot.Cells(dataStartRow, pivotTableRange.Column), _
+                                      wsPivot.Cells(dataEndRow, pivotTableRange.Column + pivotTableRange.Columns.Count - 1))
+
+        copyRange.Copy
+    Else
+        MsgBox "Pivot Table does not contain enough data to copy.", vbExclamation
+        Exit Sub
+    End If
+
+    ' === Step 3: Open Template and Paste Dynamically from A2 ===
+
+    templatePath = "D:\template.xlsx"
+    On Error Resume Next
+    Set wbTemplate = Workbooks.Open(templatePath)
+    On Error GoTo 0
+
+    If wbTemplate Is Nothing Then
+        MsgBox "Template file not found at " & templatePath, vbCritical
+        Exit Sub
+    End If
+
+    Set wsTemplate = wbTemplate.Sheets(1)
+
+    ' Determine dynamic paste range
+    Set destStartCell = wsTemplate.Range("A2")
+    rowCount = copyRange.Rows.Count
+    colCount = copyRange.Columns.Count
+    Set destEndCell = destStartCell.Offset(rowCount - 1, colCount - 1)
+
+    ' Clear and paste into dynamic range
+    With wsTemplate.Range(destStartCell, destEndCell)
+        .ClearContents
+        .PasteSpecial xlPasteValues
+    End With
+
+    ' === Step 4: Save As a Copy ===
+    savePath = "D:\output\folderresult\pivotdata.xlsx"
+
+    On Error Resume Next
+    ' Create directory if it doesn't exist
+    If Dir("D:\output\folderresult\", vbDirectory) = "" Then
+        MkDir "D:\output"
+        MkDir "D:\output\folderresult"
+    End If
+    On Error GoTo 0
+
+    ' Save As
+    Application.DisplayAlerts = False
+    wbTemplate.SaveAs Filename:=savePath, FileFormat:=xlOpenXMLWorkbook ' .xlsx format
+    Application.DisplayAlerts = True
+
+    MsgBox "Pivot data copied and saved as 'pivotdata.xlsx' in folderresult!", vbInformation
+End Sub

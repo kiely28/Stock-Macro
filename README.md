@@ -493,3 +493,72 @@ Sub CreatePivot_PlantAsRow_OthersAsValues()
 
     MsgBox "Pivot data copied and saved as 'pivotdata.xlsx' in folderresult!", vbInformation
 End Sub
+
+
+
+
+Validation for Difference Posting Check - 070225
+
+Sub CheckPlantAndFilePath()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim plantCount As Long
+    Dim i As Long
+    Dim missingPath As Boolean
+    Dim invalidPath As Boolean
+    Dim filePath As String
+    Dim fileExt As String
+    
+    Set ws = ThisWorkbook.Sheets(1) ' Adjust as needed
+
+    ' Find last row in column A (Plant)
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Count non-empty plants (excluding header)
+    plantCount = WorksheetFunction.CountA(ws.Range("A2:A" & lastRow))
+
+    ' If not exactly 4 plants, validate file paths
+    If plantCount <> 4 Then
+        missingPath = False
+        invalidPath = False
+        
+        For i = 2 To lastRow
+            If ws.Cells(i, 1).Value <> "" Then ' has Plant
+                filePath = Trim(ws.Cells(i, 2).Value)
+                
+                If filePath = "" Then
+                    ' Missing path
+                    missingPath = True
+                    ws.Cells(i, 2).Interior.Color = RGB(255, 199, 206) ' Red
+                Else
+                    ' Check if path is an existing file (not folder)
+                    If Dir(filePath, vbNormal) <> "" Then
+                        ' Check for Excel file extension
+                        fileExt = LCase(Right(filePath, Len(filePath) - InStrRev(filePath, ".")))
+                        If fileExt = "xlsx" Or fileExt = "xls" Or fileExt = "xlsm" Then
+                            ws.Cells(i, 2).Interior.ColorIndex = xlNone ' Valid
+                        Else
+                            invalidPath = True
+                            ws.Cells(i, 2).Interior.Color = RGB(255, 199, 206) ' Not Excel file
+                        End If
+                    Else
+                        invalidPath = True
+                        ws.Cells(i, 2).Interior.Color = RGB(255, 199, 206) ' Not found or is a folder
+                    End If
+                End If
+            End If
+        Next i
+        
+        If missingPath Then
+            MsgBox "You must enter Material File Path for each Plant (because Plant count ≠ 4).", vbExclamation
+        ElseIf invalidPath Then
+            MsgBox "One or more paths are not valid Excel files or do not exist.", vbCritical
+        Else
+            MsgBox "Plant count is not 4, but all Material File Paths are valid Excel files.", vbInformation
+        End If
+    Else
+        ' Exactly 4 plants — clear formatting
+        ws.Range("B2:B" & lastRow).Interior.ColorIndex = xlNone
+        MsgBox "Exactly 4 Plants — no need to check Material File Path.", vbInformation
+    End If
+End Sub

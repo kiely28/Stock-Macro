@@ -774,3 +774,76 @@ End Sub
 
 ---
 
+Buttons Update 07/04/2025
+
+
+---
+
+✅ Step 1: Declare 2 Global Flags
+
+In a regular module (e.g., Module1), put this:
+
+Public shape1Clicked As Boolean
+Public shape2Clicked As Boolean
+
+
+---
+
+✅ Step 2: Shape1 Macro
+
+Sub Shape1Macro()
+    shape1Clicked = True
+    shape2Clicked = False ' Reset shape2 flag in case of re-init
+    MsgBox "Shape1 clicked! You can now use Shape2."
+    
+    ' Put Shape1 action code here
+End Sub
+
+
+---
+
+✅ Step 3: Shape2 Macro
+
+Sub Shape2Macro()
+    If shape1Clicked Then
+        shape2Clicked = True
+        MsgBox "Shape2 running! Shape3 is now available."
+        
+        ' Put Shape2 action code here
+    Else
+        MsgBox "Please click Shape1 first before using Shape2."
+    End If
+End Sub
+
+
+---
+
+✅ Step 4: Shape3 Macro
+
+Sub Shape3Macro()
+    If Not shape1Clicked Then
+        MsgBox "Please click Shape1 first before using Shape3."
+    ElseIf Not shape2Clicked Then
+        MsgBox "Please click Shape2 first before using Shape3."
+    Else
+        MsgBox "Shape3 running now!"
+        
+        ' Put Shape3 action code here
+    End If
+End Sub
+
+
+---
+
+✅ Step 5 (Optional): Reset on Workbook Open
+
+In ThisWorkbook module:
+
+Private Sub Workbook_Open()
+    shape1Clicked = False
+    shape2Clicked = False
+End Sub
+
+
+---
+

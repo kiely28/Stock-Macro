@@ -655,3 +655,122 @@ End Sub
     
     MsgBox "SAP executed for all plants with material lists.", vbInformation
 End Sub
+
+
+
+
+Code update - 07/04/25
+
+
+✅ Combined SAP Macro (Scenario 1 + 2 with Clipboard Upload for Materials)
+
+Sub CheckPlantAndSendToSAP_Combined()
+    Dim ws As Worksheet
+    Dim lastRow As Long, i As Long, j As Long
+    Dim plantDict As Object, plantList() As String
+    Dim plantVal As String, filePath As String
+    Dim sapApp, sapCon, session As Object
+    Dim wbMaterial As Workbook
+    Dim materialData As Variant
+    Dim clipboardText As String
+    Dim plantCount As Long
+
+    ' Set Excel worksheet and get last row
+    Set ws = ThisWorkbook.Sheets(1)
+    Set plantDict = CreateObject("Scripting.Dictionary")
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+    ' Collect unique plants into dictionary
+    For i = 2 To lastRow
+        plantVal = Trim(ws.Cells(i, 1).Value)
+        If plantVal <> "" Then
+            If Not plantDict.exists(plantVal) Then
+                plantDict.Add plantVal, 1
+            End If
+        End If
+    Next i
+
+    plantCount = plantDict.Count
+
+    ' Connect to SAP GUI
+    On Error Resume Next
+    Set sapApp = GetObject("SAPGUI").GetScriptingEngine
+    If sapApp Is Nothing Then
+        MsgBox "SAP GUI is not running.", vbCritical
+        Exit Sub
+    End If
+    Set sapCon = sapApp.Children(0)
+    Set session = sapCon.Children(0)
+    On Error GoTo 0
+
+    ' ✅ SCENARIO 1: If exactly 4 unique plants
+    If plantCount = 4 Then
+        ' Prepare plant list
+        ReDim plantList(0 To plantCount - 1)
+        i = 0
+        For Each plantVal In plantDict.Keys
+            plantList(i) = plantVal
+            i = i + 1
+        Next
+
+        ' Enter first plant
+        session.findById("wnd[0]/usr/ctxtPLANT_FIELD").Text = plantList(0)
+        session.findById("wnd[0]/usr/btnPLANT_MULTI_BTN").Press
+
+        ' Enter remaining 3 into multiple selection
+        For i = 1 To 3
+            session.findById("wnd[1]/usr/tblPLANT_TABLE/txtPLANT_CELL" & Format(i - 1, "0000")).Text = plantList(i)
+        Next i
+
+        session.findById("wnd[1]/tbar[0]/btn[8]").Press ' OK
+        session.findById("wnd[0]/tbar[1]/btn[8]").Press ' Execute
+
+        MsgBox "SAP executed for 4 unique plants.", vbInformation
+        Exit Sub
+    End If
+
+    ' ❌ SCENARIO 2: Not exactly 4 — process each row
+    For i = 2 To lastRow
+        plantVal = Trim(ws.Cells(i, 1).Value)
+        filePath = Trim(ws.Cells(i, 2).Value)
+
+        If plantVal <> "" And filePath <> "" Then
+            ' Enter plant
+            session.findById("wnd[0]/usr/ctxtPLANT_FIELD").Text = plantVal
+
+            ' Open material file
+            Set wbMaterial = Workbooks.Open(filePath, ReadOnly:=True)
+            With wbMaterial.Sheets(1)
+                materialData = .Range("A3", .Cells(.Rows.Count, 1).End(xlUp)).Value
+            End With
+            wbMaterial.Close False
+
+            ' Convert to clipboard text
+            clipboardText = ""
+            If IsArray(materialData) Then
+                For j = 1 To UBound(materialData, 1)
+                    clipboardText = clipboardText & materialData(j, 1) & vbCrLf
+                Next j
+            Else
+                clipboardText = materialData & vbCrLf
+            End If
+
+            ' Copy to clipboard
+            With CreateObject("htmlfile")
+                .ParentWindow.ClipboardData.SetData "text", clipboardText
+            End With
+
+            ' Paste materials via clipboard in SAP
+            session.findById("wnd[0]/usr/btnMATERIAL_MULTI_BTN").Press
+            session.findById("wnd[1]/tbar[0]/btn[24]").Press ' Upload from clipboard
+            session.findById("wnd[1]/tbar[0]/btn[8]").Press  ' OK
+            session.findById("wnd[0]/tbar[1]/btn[8]").Press  ' Execute
+        End If
+    Next i
+
+    MsgBox "SAP executed for all plants with material lists.", vbInformation
+End Sub
+
+
+---
+

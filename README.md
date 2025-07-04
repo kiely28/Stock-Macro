@@ -891,3 +891,35 @@ Sub SAPScenario1_Loop4RowsFromExcel()
 
     MsgBox "SAP executed for plants from A2 to A5.", vbInformation
 End Sub
+
+
+07/05/25 - Inv Results Update
+
+Sub CreateResultsFolder()
+    Dim monthYear As String
+    Dim mainFolder As String
+    Dim subFolder As String
+    Dim fullPath As String
+
+    ' Get Month and Year (e.g., "July 2025")
+    monthYear = Format(Date, "MMMM YYYY")
+
+    ' Set folder paths
+    mainFolder = "D:\Data and Results " & monthYear
+    subFolder = mainFolder & "\Inv Results"
+    fullPath = subFolder
+
+    ' Check if folder already exists
+    If Dir(fullPath, vbDirectory) <> "" Then
+        MsgBox "Folder already exists: " & fullPath, vbInformation
+    Else
+        ' Create main folder if it doesn't exist
+        If Dir(mainFolder, vbDirectory) = "" Then
+            MkDir mainFolder
+        End If
+
+        ' Create subfolder
+        MkDir subFolder
+        MsgBox "Folder created successfully: " & fullPath, vbInformation
+    End If
+End Sub

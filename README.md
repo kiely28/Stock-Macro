@@ -847,3 +847,47 @@ End Sub
 
 ---
 
+Update Scenario 1
+
+
+Sub SAPScenario1_Loop4RowsFromExcel()
+    Dim ws As Worksheet
+    Dim i As Long
+    Dim sapApp, sapCon, session As Object
+
+    ' Connect to SAP GUI
+    On Error Resume Next
+    Set sapApp = GetObject("SAPGUI").GetScriptingEngine
+    If sapApp Is Nothing Then
+        MsgBox "SAP GUI is not running.", vbCritical
+        Exit Sub
+    End If
+    Set sapCon = sapApp.Children(0)
+    Set session = sapCon.Children(0)
+    On Error GoTo 0
+
+    Set ws = ThisWorkbook.Sheets(1)
+
+    ' Optional: check if exactly 4 plant values exist
+    If Application.WorksheetFunction.CountA(ws.Range("A2:A5")) <> 4 Then
+        MsgBox "Exactly 4 plant values are required in cells A2 to A5.", vbExclamation
+        Exit Sub
+    End If
+
+    ' Enter first plant directly in SAP
+    session.findById("wnd[0]/usr/ctxtPLANT_FIELD").Text = ws.Cells(2, 1).Value
+
+    ' Open SAP multiple selection
+    session.findById("wnd[0]/usr/btnPLANT_MULTI_BTN").Press
+
+    ' Enter remaining 3 plants from Excel cells A3 to A5
+    For i = 3 To 5
+        session.findById("wnd[1]/usr/tblPLANT_TABLE/txtPLANT_CELL" & Format(i - 3, "0000")).Text = ws.Cells(i, 1).Value
+    Next i
+
+    ' Confirm and Execute
+    session.findById("wnd[1]/tbar[0]/btn[8]").Press  ' OK
+    session.findById("wnd[0]/tbar[1]/btn[8]").Press  ' Execute
+
+    MsgBox "SAP executed for plants from A2 to A5.", vbInformation
+End Sub

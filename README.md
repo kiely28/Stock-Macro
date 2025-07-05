@@ -923,3 +923,44 @@ Sub CreateResultsFolder()
         MsgBox "Folder created successfully: " & fullPath, vbInformation
     End If
 End Sub
+
+
+
+
+---
+
+✅ Final Macro: Delete Only Excel Files
+
+Sub CreateResultsFolder()
+    Dim monthYear As String
+    Dim mainFolder As String
+    Dim subFolder As String
+    Dim fileName As String
+
+    ' Get Month and Year (e.g., "July 2025")
+    monthYear = Format(Date, "MMMM YYYY")
+
+    ' Define paths
+    mainFolder = "D:\Data and Results " & monthYear
+    subFolder = mainFolder & "\Inv Results"
+
+    ' Check if subfolder exists
+    If Dir(subFolder, vbDirectory) <> "" Then
+        ' Delete only .xlsx and .xls files
+        fileName = Dir(subFolder & "\*.xls*") ' Matches .xls and .xlsx
+        Do While fileName <> ""
+            Kill subFolder & "\" & fileName
+            fileName = Dir
+        Loop
+        MsgBox "Folder already exists. All Excel files were deleted in 'Inv Results'.", vbInformation
+    Else
+        ' Create folders if they do not exist
+        If Dir(mainFolder, vbDirectory) = "" Then MkDir mainFolder
+        MkDir subFolder
+        MsgBox "Folder created successfully: " & subFolder, vbInformation
+    End If
+End Sub
+
+
+---
+

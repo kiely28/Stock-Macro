@@ -963,4 +963,69 @@ End Sub
 
 
 ---
+Update 070725
+
+---
+
+✅ Final Code: Delete Only Excel Files, Show MsgBox for Open Files
+
+Sub CreateResultsFolder()
+    Dim monthYear As String
+    Dim mainFolder As String
+    Dim subFolder As String
+    Dim fileName As String
+    Dim fullPath As String
+    Dim openFiles As String
+
+    ' Get Month and Year (e.g., "July 2025")
+    monthYear = Format(Date, "MMMM YYYY")
+
+    ' Define folder paths
+    mainFolder = "D:\Data and Results " & monthYear
+    subFolder = mainFolder & "\Inv Results"
+
+    ' Check if subfolder exists
+    If Dir(subFolder, vbDirectory) <> "" Then
+        ' Check and delete Excel files (.xls, .xlsx, .xlsm, etc.)
+        fileName = Dir(subFolder & "\*.xls*")
+        Do While fileName <> ""
+            fullPath = subFolder & "\" & fileName
+            If IsFileOpen(fullPath) Then
+                openFiles = openFiles & vbCrLf & fileName
+            Else
+                Kill fullPath
+            End If
+            fileName = Dir
+        Loop
+
+        If openFiles <> "" Then
+            MsgBox "Some Excel files could not be deleted because they are open:" & vbCrLf & openFiles, vbExclamation
+        Else
+            MsgBox "All Excel files deleted in 'Inv Results'.", vbInformation
+        End If
+    Else
+        ' Create folder structure if it doesn't exist
+        If Dir(mainFolder, vbDirectory) = "" Then MkDir mainFolder
+        MkDir subFolder
+        MsgBox "Folder created successfully: " & subFolder, vbInformation
+    End If
+End Sub
+
+' Function to check if a file is open/locked
+Function IsFileOpen(filePath As String) As Boolean
+    Dim fileNum As Integer
+    Dim errNum As Integer
+
+    On Error Resume Next
+    fileNum = FreeFile()
+    Open filePath For Binary Access Read Write Lock Read Write As #fileNum
+    Close fileNum
+    errNum = Err
+    On Error GoTo 0
+
+    IsFileOpen = (errNum <> 0)
+End Function
+
+
+---
 

@@ -1029,3 +1029,19 @@ End Function
 
 ---
 
+
+Dim existingSheet As Worksheet
+On Error Resume Next
+Set existingSheet = ThisWorkbook.Sheets("PivotOutput")
+On Error GoTo 0
+
+If Not existingSheet Is Nothing Then
+    Application.DisplayAlerts = False
+    existingSheet.Delete
+    Application.DisplayAlerts = True
+    Set existingSheet = Nothing
+End If
+
+Set wsPivot = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
+wsPivot.Name = "PivotOutput"
+

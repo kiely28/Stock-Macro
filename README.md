@@ -1263,3 +1263,124 @@ Sub CombineFilesCreatePivotAndPasteToTemplate()
     
     MsgBox "✅ Done: Combined, pivoted, and pasted into template including external qty."
 End Sub
+
+
+
+
+Sub CreatePivot_PlantAsRow_OthersAsValues()
+    Dim wsData As Worksheet, wsPivot As Worksheet
+    Dim ptCache As PivotCache, pt As PivotTable
+    Dim dataRange As Range, copyRange As Range
+    Dim lastRow As Long, lastCol As Long
+    Dim colNumbers As Variant
+    Dim headers() As String
+    Dim i As Long, dataStartRow As Long, dataEndRow As Long
+    Dim pivotTableRange As Range
+
+    Dim wbTemplate As Workbook
+    Dim wsTemplate As Worksheet
+    Dim templatePath As String, savePath As String
+    Dim destStartCell As Range, destEndCell As Range
+    Dim rowCount As Long, colCount As Long
+
+    ' === Step 1: Prepare Source Sheet and Column Mapping ===
+    Set wsData = ThisWorkbook.Sheets("Sheet1")
+    colNumbers = Array(2, 9, 10, 11, 12, 13, 14, 16, 17, 15, 18)
+
+    ReDim headers(LBound(colNumbers) To UBound(colNumbers))
+    For i = LBound(colNumbers) To UBound(colNumbers)
+        headers(i) = wsData.Cells(1, colNumbers(i)).Value
+    Next i
+
+    lastRow = wsData.Cells(wsData.Rows.Count, "A").End(xlUp).Row
+    lastCol = wsData.Cells(1, wsData.Columns.Count).End(xlToLeft).Column
+    Set dataRange = wsData.Range(wsData.Cells(1, 1), wsData.Cells(lastRow, lastCol))
+
+    ' === Step 2: Delete Existing "PivotOutput" Safely ===
+    Dim existingSheet As Worksheet
+    On Error Resume Next
+    Set existingSheet = ThisWorkbook.Sheets("PivotOutput")
+    On Error GoTo 0
+
+    If Not existingSheet Is Nothing Then
+        Application.DisplayAlerts = False
+        existingSheet.Delete
+        Application.DisplayAlerts = True
+        Set existingSheet = Nothing
+    End If
+
+    ' === Step 3: Create New PivotOutput Sheet ===
+    Set wsPivot = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
+    wsPivot.Name = "PivotOutput"
+
+    ' === Step 4: Create Pivot Table ===
+    Set ptCache = ThisWorkbook.PivotCaches.Create(xlDatabase, dataRange)
+    Set pt = ptCache.CreatePivotTable(wsPivot.Range("A3"), "CustomPivot")
+
+    pt.PivotFields(headers(0)).Orientation = xlRowField
+    pt.PivotFields(headers(0)).Position = 1
+
+    For i = 1 To UBound(headers)
+        On Error Resume Next
+        pt.AddDataField pt.PivotFields(headers(i)), "Sum of " & headers(i), xlSum
+        On Error GoTo 0
+    Next i
+
+    wsPivot.Columns.AutoFit
+    DoEvents
+
+    ' === Step 5: Copy Pivot Data (excluding header and grand total) ===
+    Set pivotTableRange = pt.TableRange1
+
+    If pivotTableRange.Rows.Count > 2 Then
+        dataStartRow = pivotTableRange.Row + 1
+        dataEndRow = pivotTableRange.Row + pivotTableRange.Rows.Count - 2
+
+        Set copyRange = wsPivot.Range(wsPivot.Cells(dataStartRow, pivotTableRange.Column), _
+                                      wsPivot.Cells(dataEndRow, pivotTableRange.Column + pivotTableRange.Columns.Count - 1))
+
+        copyRange.Copy
+    Else
+        MsgBox "Pivot Table does not contain enough data to copy.", vbExclamation
+        Exit Sub
+    End If
+
+    ' === Step 6: Open Template File and Paste ===
+    templatePath = "D:\template.xlsx"
+    On Error Resume Next
+    Set wbTemplate = Workbooks.Open(templatePath)
+    On Error GoTo 0
+
+    If wbTemplate Is Nothing Then
+        MsgBox "Template file not found at " & templatePath, vbCritical
+        Exit Sub
+    End If
+
+    Set wsTemplate = wbTemplate.Sheets(1)
+
+    Set destStartCell = wsTemplate.Range("A2")
+    rowCount = copyRange.Rows.Count
+    colCount = copyRange.Columns.Count
+    Set destEndCell = destStartCell.Offset(rowCount - 1, colCount - 1)
+
+    With wsTemplate.Range(destStartCell, destEndCell)
+        .ClearContents
+        .PasteSpecial xlPasteValues
+    End With
+
+    ' === Step 7: Save As New File ===
+    savePath = "D:\results\reports\pivot inv result.xlsx"
+
+    ' Create folders if missing
+    On Error Resume Next
+    If Dir("D:\results", vbDirectory) = "" Then MkDir "D:\results"
+    If Dir("D:\results\reports", vbDirectory) = "" Then MkDir "D:\results\reports"
+    On Error GoTo 0
+
+    Application.DisplayAlerts = False
+    wbTemplate.SaveAs Filename:=savePath, FileFormat:=xlOpenXMLWorkbook
+    wbTemplate.Close SaveChanges:=False ' ✅ Automatically close the saved file
+    Application.DisplayAlerts = True
+
+    MsgBox "Pivot data pasted and saved as 'pivot inv result.xlsx' in D:\results\reports. File has been closed.", vbInformation
+End Sub

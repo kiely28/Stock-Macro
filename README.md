@@ -1484,3 +1484,32 @@ instead of ThisWorkbook.
 
 
 
+---
+
+✅ Updated Part of the Code
+
+This part saves the wsData (Sheet1) into:
+
+📁 D:\reports\results\pivot summary inv results.xlsx
+
+' === Step 7: Save wsData (Sheet1) to D:\reports\results\pivot summary inv results.xlsx ===
+summaryPath = "D:\reports\results\pivot summary inv results.xlsx"
+
+' Ensure folder exists
+On Error Resume Next
+If Dir("D:\reports", vbDirectory) = "" Then MkDir "D:\reports"
+If Dir("D:\reports\results", vbDirectory) = "" Then MkDir "D:\reports\results"
+On Error GoTo 0
+
+' Create new workbook with copy of wsData
+wsData.Copy
+Set wbSummary = ActiveWorkbook
+Application.DisplayAlerts = False
+wbSummary.SaveAs Filename:=summaryPath, FileFormat:=xlOpenXMLWorkbook
+wbSummary.Close SaveChanges:=False
+Application.DisplayAlerts = True
+
+
+---
+
+

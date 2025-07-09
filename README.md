@@ -1384,3 +1384,44 @@ Sub CreatePivot_PlantAsRow_OthersAsValues()
 
     MsgBox "Pivot data pasted and saved as 'pivot inv result.xlsx' in D:\results\reports. File has been closed.", vbInformation
 End Sub
+
+
+
+07/10/25 - SAP Check Error
+---
+
+--- Full Example
+
+Sub SAP_ExportCheck()
+
+    Dim session As Object
+    Set session = GetObject("SAPGUI").GetScriptingEngine.Children(0).Children(0).Children(0)
+
+    ' Perform your transaction steps here...
+    ' For example, session.findById("...").press
+
+    ' Wait for SAP to load response (you can add delay or wait loop)
+    Application.Wait Now + TimeValue("0:00:02")
+
+    ' Check SAP status bar
+    Dim statusText As String
+    statusText = session.findById("wnd[0]/sbar").Text
+
+    If InStr(statusText, "No data") > 0 Or _
+       InStr(statusText, "not found") > 0 Or _
+       InStr(statusText, "Error in ABAP") > 0 Or _
+       session.findById("wnd[0]/sbar").MessageType = "E" Then
+
+        MsgBox "❌ SAP Error: " & statusText, vbCritical, "SAP Message"
+        Exit Sub
+    End If
+
+    ' Otherwise continue exporting to Excel
+    MsgBox "✅ Data loaded successfully!", vbInformation
+
+End Sub
+
+
+---
+
+

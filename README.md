@@ -1045,3 +1045,103 @@ End If
 Set wsPivot = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
 wsPivot.Name = "PivotOutput"
 
+Sub CombineFilesCreatePivotAndPasteToTemplate()
+    Dim folderPath As String
+    Dim fileName As String
+    Dim wbSource As Workbook, wbDest As Workbook, wbTemplate As Workbook
+    Dim wsSource As Worksheet, wsDest As Worksheet, pivotSheet As Worksheet
+    Dim lastRow As Long, destRow As Long
+    Dim isFirstFile As Boolean
+    Dim dataRange As Range
+    Dim pivotCache As PivotCache
+    Dim pivotTable As PivotTable
+    Dim plantRange As Range, qtyRange As Range
+    Dim copyPlantRange As Range, copyQtyRange As Range
+    
+    ' Paths
+    folderPath = "D:\reports\dpc\"
+    Dim templatePath As String
+    templatePath = "D:\results\template dpc.xlsx"
+    
+    ' Create new workbook
+    Set wbDest = Workbooks.Add
+    Set wsDest = wbDest.Sheets(1)
+    wsDest.Name = "Combined Data"
+    destRow = 1
+    isFirstFile = True
+    
+    ' Combine Excel files
+    fileName = Dir(folderPath & "*.xls*")
+    Do While fileName <> ""
+        Set wbSource = Workbooks.Open(folderPath & fileName)
+        Set wsSource = wbSource.Sheets(1)
+        
+        With wsSource
+            lastRow = .Cells(.Rows.Count, 1).End(xlUp).Row
+            If isFirstFile Then
+                .Range("A1:I" & lastRow).Copy wsDest.Range("A" & destRow)
+                destRow = destRow + lastRow
+                isFirstFile = False
+            Else
+                .Range("A2:I" & lastRow).Copy wsDest.Range("A" & destRow)
+                destRow = destRow + lastRow - 1
+            End If
+        End With
+        
+        wbSource.Close False
+        fileName = Dir()
+    Loop
+    
+    ' Create Pivot Table
+    Set dataRange = wsDest.Range("A1").CurrentRegion
+    Set pivotSheet = wbDest.Sheets.Add(After:=wsDest)
+    pivotSheet.Name = "Pivot Report"
+    
+    Set pivotCache = wbDest.PivotCaches.Create(SourceType:=xlDatabase, SourceData:=dataRange)
+    Set pivotTable = pivotCache.CreatePivotTable( _
+        TableDestination:=pivotSheet.Range("A3"), _
+        TableName:="PlantQtyPivot")
+    
+    With pivotTable
+        .PivotFields(1).Orientation = xlRowField  ' Column 1 = Plant
+        .PivotFields(9).Orientation = xlDataField ' Column 9 = Qty
+        .PivotFields(9).Function = xlSum
+        .PivotFields(9).NumberFormat = "#,##0"
+    End With
+    
+    ' Save combined workbook
+    Dim combinedPath As String
+    combinedPath = folderPath & "combined.xlsx"
+    wbDest.SaveAs combinedPath
+    
+    ' Get Plant and Qty columns from Pivot
+    Dim lastPivotRow As Long
+    lastPivotRow = pivotSheet.Cells(pivotSheet.Rows.Count, "A").End(xlUp).Row
+    
+    Set plantRange = pivotSheet.Range("A4:A" & lastPivotRow)
+    Set qtyRange = pivotSheet.Range("B4:B" & lastPivotRow)
+    
+    ' Exclude Grand Total if it exists
+    If LCase(plantRange.Cells(plantRange.Rows.Count, 1).Value) = "grand total" Then
+        Set copyPlantRange = plantRange.Resize(plantRange.Rows.Count - 1)
+        Set copyQtyRange = qtyRange.Resize(qtyRange.Rows.Count - 1)
+    Else
+        Set copyPlantRange = plantRange
+        Set copyQtyRange = qtyRange
+    End If
+    
+    ' Open template file and paste data
+    Set wbTemplate = Workbooks.Open(templatePath)
+    
+    With wbTemplate.Sheets(1)
+        .Range("E19").Resize(copyPlantRange.Rows.Count, 1).Value = copyPlantRange.Value
+        .Range("G19").Resize(copyQtyRange.Rows.Count, 1).Value = copyQtyRange.Value
+    End With
+    
+    ' Save and close
+    wbTemplate.Save
+    wbTemplate.Close
+    wbDest.Close SaveChanges:=False
+    
+    MsgBox "✅ Done: Combined, pivoted, and pasted to template."
+End Sub

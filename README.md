@@ -1423,5 +1423,64 @@ End Sub
 
 
 ---
+07-10-25 SaveAs Close Workbook
+
+---
+
+✅ Updated Macro: Save and Close Workbook
+
+Sub SaveAndCloseWorkbook()
+
+    Dim savePath As String
+    Dim fileName As String
+    Dim fullPath As String
+
+    ' Set the path and file name
+    savePath = "D:\results\reports\"           ' Your desired folder
+    fileName = "Report_" & Format(Now, "yyyymmdd_hhmmss") & ".xlsx"
+    fullPath = savePath & fileName
+
+    ' Check if file already exists (optional safety)
+    If Dir(fullPath) <> "" Then
+        MsgBox "File already exists: " & fullPath, vbExclamation
+        Exit Sub
+    End If
+
+    ' Save the workbook
+    ThisWorkbook.SaveAs Filename:=fullPath, FileFormat:=xlOpenXMLWorkbook ' .xlsx format
+
+    ' Confirm save
+    MsgBox "Workbook saved as: " & fullPath, vbInformation
+
+    ' Close the workbook
+    ThisWorkbook.Close SaveChanges:=False ' Already saved, no need to save again
+
+End Sub
+
+
+---
+
+🔍 Key Parts Explained
+
+Code Line	Purpose
+
+ThisWorkbook.SaveAs ...	Saves the current workbook to the specified path
+ThisWorkbook.Close SaveChanges:=False	Closes the workbook without asking to save again
+Dir(fullPath) check	Prevents overwriting existing files (optional)
+MsgBox	Confirms success before closing
+
+
+
+---
+
+🛡️ Tip:
+
+If this workbook runs from a master macro file, and you don't want to close it, use:
+
+ActiveWorkbook.Close SaveChanges:=False
+
+instead of ThisWorkbook.
+
+
 
 

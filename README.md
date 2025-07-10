@@ -1513,3 +1513,83 @@ Application.DisplayAlerts = True
 ---
 
 
+Update 07/10/25
+
+---
+
+🧾 Reusable Subroutine
+
+Sub AddOrCleanSubfolder()
+    Dim mainFolder As String
+    Dim subFolderName As String
+    Dim subFolderPath As String
+    Dim fileName As String
+    Dim fullPath As String
+    Dim openFiles As String
+
+    ' === Configuration ===
+    mainFolder = "D:\Data and Results July 2025" ' Change this to your existing main folder path
+    subFolderName = "Summary Files"             ' Subfolder name you want to add
+    subFolderPath = mainFolder & "\" & subFolderName
+
+    ' === Check if subfolder exists ===
+    If Dir(subFolderPath, vbDirectory) <> "" Then
+        ' Subfolder exists — delete Excel files only
+        fileName = Dir(subFolderPath & "\*.xls*")
+        Do While fileName <> ""
+            fullPath = subFolderPath & "\" & fileName
+            If IsFileOpen(fullPath) Then
+                openFiles = openFiles & vbCrLf & fileName
+            Else
+                Kill fullPath
+            End If
+            fileName = Dir
+        Loop
+
+        If openFiles <> "" Then
+            MsgBox "Some Excel files could not be deleted because they are open:" & vbCrLf & openFiles, vbExclamation
+        Else
+            MsgBox "All Excel files in '" & subFolderName & "' were deleted.", vbInformation
+        End If
+    Else
+        ' Subfolder does not exist — create it
+        MkDir subFolderPath
+        MsgBox "Subfolder created: " & subFolderPath, vbInformation
+    End If
+End Sub
+
+
+---
+
+🔁 Required Helper Function
+
+Make sure you include this function in a module (if you haven't yet):
+
+Function IsFileOpen(filePath As String) As Boolean
+    Dim fileNum As Integer
+    Dim errNum As Integer
+
+    On Error Resume Next
+    fileNum = FreeFile()
+    Open filePath For Binary Access Read Write Lock Read Write As #fileNum
+    Close fileNum
+    errNum = Err
+    On Error GoTo 0
+
+    IsFileOpen = (errNum <> 0)
+End Function
+
+
+---
+
+✅ Customize Easily
+
+Change the following lines to target any folder/subfolder:
+
+mainFolder = "D:\Data and Results July 2025"
+subFolderName = "Summary Files"
+
+
+---
+
+

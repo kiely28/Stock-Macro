@@ -1672,5 +1672,75 @@ End Sub
 
 ---
 
+07-11-25 Update Button Disabled
+
+
+
+---
+
+🛠 Updated Code Using Cell Storage (Safe & Persistent)
+
+🔁 1. Replace the previous macros in your module:
+
+Sub Shape1Macro()
+    ' Set Shape1 clicked flag in worksheet
+    ThisWorkbook.Sheets(1).Range("Z1").Value = True
+    ThisWorkbook.Sheets(1).Range("Z2").Value = False ' Reset Shape2 flag
+
+    ' Update shape visuals
+    With ActiveSheet.Shapes("Shape2")
+        .Fill.ForeColor.RGB = RGB(0, 176, 240) ' Blue
+    End With
+    With ActiveSheet.Shapes("Shape3")
+        .Fill.ForeColor.RGB = RGB(200, 200, 200) ' Gray
+    End With
+
+    MsgBox "Shape1 clicked! You can now use Shape2."
+End Sub
+
+Sub Shape2Macro()
+    If ThisWorkbook.Sheets(1).Range("Z1").Value = True Then
+        ThisWorkbook.Sheets(1).Range("Z2").Value = True
+
+        With ActiveSheet.Shapes("Shape3")
+            .Fill.ForeColor.RGB = RGB(0, 176, 240) ' Blue
+        End With
+
+        MsgBox "Shape2 running! You can now use Shape3."
+    Else
+        MsgBox "Please click Shape1 first before using Shape2.", vbExclamation
+    End If
+End Sub
+
+Sub Shape3Macro()
+    If ThisWorkbook.Sheets(1).Range("Z1").Value <> True Then
+        MsgBox "Please click Shape1 first before using Shape3.", vbExclamation
+    ElseIf ThisWorkbook.Sheets(1).Range("Z2").Value <> True Then
+        MsgBox "Please click Shape2 first before using Shape3.", vbExclamation
+    Else
+        MsgBox "Shape3 running now!"
+    End If
+End Sub
+
+
+---
+
+🧽 2. In Workbook_Open (reset on open):
+
+Private Sub Workbook_Open()
+    With ThisWorkbook.Sheets(1)
+        .Range("Z1").Value = False ' shape1Clicked
+        .Range("Z2").Value = False ' shape2Clicked
+
+        .Shapes("Shape1").Fill.ForeColor.RGB = RGB(0, 176, 240)
+        .Shapes("Shape2").Fill.ForeColor.RGB = RGB(200, 200, 200)
+        .Shapes("Shape3").Fill.ForeColor.RGB = RGB(200, 200, 200)
+    End With
+End Sub
+
+
+---
+
+
 
 

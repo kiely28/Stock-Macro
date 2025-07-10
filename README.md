@@ -1593,3 +1593,84 @@ subFolderName = "Summary Files"
 ---
 
 
+
+
+
+---
+
+✅ 1. Module Code – With Shape Color Control
+
+Public shape1Clicked As Boolean
+Public shape2Clicked As Boolean
+
+' === Shape1 Macro ===
+Sub Shape1Macro()
+    shape1Clicked = True
+    shape2Clicked = False ' Reset in case Shape1 is re-clicked
+
+    ' Enable Shape2, visually
+    With ActiveSheet.Shapes("Shape2")
+        .Fill.ForeColor.RGB = RGB(0, 176, 240) ' Blue
+    End With
+
+    ' Disable Shape3, just in case
+    With ActiveSheet.Shapes("Shape3")
+        .Fill.ForeColor.RGB = RGB(200, 200, 200) ' Gray
+    End With
+
+    MsgBox "Shape1 clicked! You can now use Shape2."
+End Sub
+
+' === Shape2 Macro ===
+Sub Shape2Macro()
+    If shape1Clicked Then
+        shape2Clicked = True
+
+        ' Enable Shape3, visually
+        With ActiveSheet.Shapes("Shape3")
+            .Fill.ForeColor.RGB = RGB(0, 176, 240) ' Blue
+        End With
+
+        MsgBox "Shape2 running! You can now use Shape3."
+    Else
+        MsgBox "Please click Shape1 first before using Shape2.", vbExclamation
+    End If
+End Sub
+
+' === Shape3 Macro ===
+Sub Shape3Macro()
+    If Not shape1Clicked Then
+        MsgBox "Please click Shape1 first before using Shape3.", vbExclamation
+    ElseIf Not shape2Clicked Then
+        MsgBox "Please click Shape2 first before using Shape3.", vbExclamation
+    Else
+        MsgBox "Shape3 running now!"
+    End If
+End Sub
+
+
+---
+
+✅ 2. Workbook_Open Event – Reset and Visual Setup
+
+In ThisWorkbook:
+
+Private Sub Workbook_Open()
+    shape1Clicked = False
+    shape2Clicked = False
+
+    With Sheets(1)
+        ' Shape1 enabled (blue)
+        .Shapes("Shape1").Fill.ForeColor.RGB = RGB(0, 176, 240)
+
+        ' Shape2 and Shape3 disabled (gray)
+        .Shapes("Shape2").Fill.ForeColor.RGB = RGB(200, 200, 200)
+        .Shapes("Shape3").Fill.ForeColor.RGB = RGB(200, 200, 200)
+    End With
+End Sub
+
+
+---
+
+
+

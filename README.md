@@ -1741,6 +1741,79 @@ End Sub
 
 ---
 
+071525 - Update DPC Logic
+Sub ProcessPlantAndMaterial()
+
+    Dim sapApp As Object
+    Dim sapGuiAuto As Object
+    Dim sapConnection As Object
+    Dim sapSession As Object
+    
+    Dim ws As Worksheet
+    Dim lastRow As Long, i As Long
+    Dim plant As String, matPath As String
+    
+    Set ws = ThisWorkbook.Sheets(1) ' Adjust if needed
+
+    ' Connect to SAP
+    On Error Resume Next
+    Set sapGuiAuto = GetObject("SAPGUI")
+    If sapGuiAuto Is Nothing Then
+        MsgBox "SAP GUI not running."
+        Exit Sub
+    End If
+    Set sapApp = sapGuiAuto.GetScriptingEngine
+    Set sapConnection = sapApp.Children(0)
+    Set sapSession = sapConnection.Children(0)
+    On Error GoTo 0
+
+    ' Loop through B10:B13
+    For i = 10 To 13
+        plant = Trim(ws.Range("B" & i).Value)
+        matPath = Trim(ws.Range("C" & i).Value)
+        
+        If plant <> "" Then
+            ' Paste Plant in SAP
+            sapSession.FindById("wnd[0]/usr/ctxtS_PLANT").Text = plant
+            
+            If matPath <> "" Then
+                ' If Material path is provided
+                sapSession.FindById("wnd[0]/usr/btnMAT_OPEN").Press ' Simulated button to open material
+                Call PasteMaterialFromExcel(matPath, sapSession)
+            Else
+                ' No material path - clear or skip material field
+                sapSession.FindById("wnd[0]/usr/ctxtS_MATERIAL").Text = ""
+            End If
+        End If
+    Next i
+
+    MsgBox "Process complete."
+
+End Sub
+
+Sub PasteMaterialFromExcel(matPath As String, sapSession As Object)
+    Dim matWB As Workbook
+    Dim matWS As Worksheet
+    Dim dataToPaste As String
+    
+    ' Open Material Excel File
+    If Dir(matPath) = "" Then
+        MsgBox "Material file not found: " & matPath
+        Exit Sub
+    End If
+    
+    Set matWB = Workbooks.Open(matPath, ReadOnly:=True)
+    Set matWS = matWB.Sheets(1) ' Adjust if needed
+    
+    ' Example: get material from A2 (adjust as needed)
+    dataToPaste = Trim(matWS.Range("A2").Value)
+    
+    ' Paste material into SAP field
+    sapSession.FindById("wnd[0]/usr/ctxtS_MATERIAL").Text = dataToPaste
+    
+    matWB.Close False
+End Sub
+
 
 
 

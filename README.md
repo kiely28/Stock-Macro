@@ -1963,3 +1963,189 @@ Sub HighlightMissingFilePaths()
 
 End Sub
 
+Update - 071625 07:39AM
+
+Here's a step-by-step guide to create your ASP.NET Web Forms (C#) project for Meeting Attendance Logging using Visual Studio:
+
+
+---
+
+✅ STEP 1: Open Visual Studio & Create Project
+
+1. Open Visual Studio
+
+
+2. Click "Create a new project"
+
+
+3. Search for “ASP.NET Web Application (.NET Framework)”
+
+
+4. Click Next
+
+
+
+
+---
+
+✅ STEP 2: Configure the Project
+
+1. Project Name: MeetingAttendanceApp
+
+
+2. Location: Choose any folder
+
+
+3. Click Create
+
+
+
+
+---
+
+✅ STEP 3: Choose Template
+
+1. Select Web Forms
+
+
+2. Uncheck HTTPS (optional for local testing)
+
+
+3. Click Create
+
+
+
+
+---
+
+✅ STEP 4: Add New Web Form Page
+
+1. In Solution Explorer, right-click the project → Add → Web Form
+
+
+2. Name it: MeetingForm.aspx
+
+
+
+
+---
+
+✅ STEP 5: Add Bootstrap
+
+1. Open MeetingForm.aspx
+
+
+2. Inside <head>, add this line:
+
+
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+
+---
+
+✅ STEP 6: Design the Form
+
+Replace the entire <body> section of MeetingForm.aspx with this:
+
+<form id="form1" runat="server">
+    <div class="container mt-5">
+        <div class="card shadow rounded p-4">
+            <h3 class="mb-4">Meeting Attendance Logging</h3>
+
+            <div class="mb-3">
+                <label for="txtTitle" class="form-label">Title / Agenda</label>
+                <asp:TextBox ID="txtTitle" runat="server" CssClass="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label for="txtStart" class="form-label">Start Date & Time</label>
+                <asp:TextBox ID="txtStart" runat="server" TextMode="DateTimeLocal" CssClass="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label for="txtEnd" class="form-label">End Date & Time</label>
+                <asp:TextBox ID="txtEnd" runat="server" TextMode="DateTimeLocal" CssClass="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label for="txtVenue" class="form-label">Venue / Location</label>
+                <asp:TextBox ID="txtVenue" runat="server" CssClass="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label for="txtOrganizer" class="form-label">Organizer</label>
+                <asp:TextBox ID="txtOrganizer" runat="server" CssClass="form-control" />
+            </div>
+
+            <asp:Button ID="btnSave" runat="server" Text="Save" CssClass="btn btn-primary" OnClick="btnSave_Click" />
+            <asp:Label ID="lblStatus" runat="server" CssClass="form-text mt-3 text-success" />
+        </div>
+    </div>
+</form>
+
+
+---
+
+✅ STEP 7: Add Code-Behind Logic
+
+1. Open MeetingForm.aspx.cs
+
+
+2. Add this code:
+
+
+
+using System;
+
+public partial class MeetingForm : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+    }
+
+    protected void btnSave_Click(object sender, EventArgs e)
+    {
+        string title = txtTitle.Text;
+        string start = txtStart.Text;
+        string end = txtEnd.Text;
+        string venue = txtVenue.Text;
+        string organizer = txtOrganizer.Text;
+
+        // This is where you'd insert into SQL (optional next step)
+        lblStatus.Text = "Meeting saved successfully!";
+    }
+}
+
+
+---
+
+✅ STEP 8: Set Start Page
+
+1. In Solution Explorer, right-click MeetingForm.aspx
+
+
+2. Click Set as Start Page
+
+
+
+
+---
+
+✅ STEP 9: Run the Project
+
+1. Press Ctrl + F5 (or click the green Run button)
+
+
+2. Your meeting logging form will appear
+
+
+3. Try filling it out and clicking Save
+
+
+
+
+---
+
+
+

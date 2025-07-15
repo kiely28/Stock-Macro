@@ -1815,5 +1815,127 @@ Sub PasteMaterialFromExcel(matPath As String, sapSession As Object)
 End Sub
 
 
+Meeting Attendance Logging - 071625
+
+---
+
+✅ Overview:
+
+Fields: Title/Agenda, Start DateTime, End DateTime, Venue, Organizer
+
+Button: Save
+
+Framework: ASP.NET Web Forms (.NET Framework)
+
+Styling: Bootstrap 5 (CDN)
+
+
+
+---
+
+📁 1. Add Bootstrap
+
+In your Site.Master or your main layout file (<head> section), add:
+
+<!-- Bootstrap 5 CDN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+
+---
+
+📄 2. Create Web Form (e.g., MeetingForm.aspx)
+
+MeetingForm.aspx:
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="MeetingForm.aspx.cs" Inherits="MeetingForm" %>
+
+<!DOCTYPE html>
+<html>
+<head runat="server">
+    <title>Meeting Attendance Logging</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div class="container mt-5">
+            <div class="card shadow rounded p-4">
+                <h3 class="mb-4">Meeting Attendance Logging</h3>
+
+                <div class="mb-3">
+                    <label for="txtTitle" class="form-label">Title / Agenda</label>
+                    <asp:TextBox ID="txtTitle" runat="server" CssClass="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="txtStart" class="form-label">Start Date & Time</label>
+                    <asp:TextBox ID="txtStart" runat="server" TextMode="DateTimeLocal" CssClass="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="txtEnd" class="form-label">End Date & Time</label>
+                    <asp:TextBox ID="txtEnd" runat="server" TextMode="DateTimeLocal" CssClass="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="txtVenue" class="form-label">Venue / Location</label>
+                    <asp:TextBox ID="txtVenue" runat="server" CssClass="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="txtOrganizer" class="form-label">Organizer</label>
+                    <asp:TextBox ID="txtOrganizer" runat="server" CssClass="form-control" />
+                </div>
+
+                <asp:Button ID="btnSave" runat="server" Text="Save" CssClass="btn btn-primary" OnClick="btnSave_Click" />
+                <asp:Label ID="lblStatus" runat="server" CssClass="form-text mt-3 text-success" />
+            </div>
+        </div>
+    </form>
+</body>
+</html>
+
+
+---
+
+🧠 3. Code-Behind: MeetingForm.aspx.cs
+
+using System;
+
+public partial class MeetingForm : System.Web.UI.Page
+{
+    protected void Page_Load(object sender, EventArgs e)
+    {
+    }
+
+    protected void btnSave_Click(object sender, EventArgs e)
+    {
+        string title = txtTitle.Text;
+        string start = txtStart.Text;
+        string end = txtEnd.Text;
+        string venue = txtVenue.Text;
+        string organizer = txtOrganizer.Text;
+
+        // You can store this in SQL or file - for now, just display success
+        lblStatus.Text = "Meeting saved successfully!";
+    }
+}
+
+
+---
+
+🧪 4. Run & Test
+
+Launch in browser (Ctrl + F5)
+
+Fill out the form, click Save, and you'll see the success message.
+
+(Next: You can store into SQL Server using a stored procedure if needed.)
+
+
+
+---
+
+
+
 
 

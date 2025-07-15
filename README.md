@@ -1937,5 +1937,29 @@ Fill out the form, click Save, and you'll see the success message.
 
 
 
+Sub HighlightMissingFilePaths()
 
+    Dim rng As Range
+    Dim cell As Range
+    Dim filePath As String
+
+    Set rng = Range("C10:C13")   ' File path range
+
+    For Each cell In rng
+        filePath = Trim(cell.Value)
+        
+        If filePath <> "" Then
+            If Dir(filePath) <> "" Then
+                cell.Interior.ColorIndex = xlNone  ' Clear background if file exists
+            Else
+                cell.Interior.Color = RGB(255, 199, 206) ' Light red if file not found
+            End If
+        Else
+            cell.Interior.Color = RGB(255, 235, 156) ' Light yellow if empty
+        End If
+    Next cell
+
+    MsgBox "File check complete. Missing or empty paths highlighted.", vbInformation
+
+End Sub
 

@@ -1,0 +1,36 @@
+
+---
+
+🧪 Test Steps and Pass/Fail Criteria
+
+Step	Action Item	Expected Result	Pass/Fail Criteria
+
+1	Open macro-enabled workbook	Workbook opens with Sheet1 present	✅ Sheet1 is visible
+2	Review data in Sheet1	Headers in Row 1, values in rows below	✅ Header columns found
+3	Confirm D:\template.xlsx exists and is not open	File found and ready for use	✅ Template opens without error
+4	Run macro CreatePivot_PlantAsRow_OthersAsValues	Macro runs without error	✅ No debug or halt
+5	Verify PivotOutput sheet is created	New sheet appears with pivot table	✅ Pivot table layout correct
+6	Check Pivot Table	“Plant” in rows, other fields as values (Sum)	✅ All expected columns in pivot
+7	Check copied pivot data (excluding header & grand total)	Range copied accurately	✅ No header or grand total included
+8	Open pivot inv result.xlsx	Confirm pasted data in A2:K11	✅ Data pasted in correct range
+9	Open pivot summary inv results.xlsx	Only Sheet1 saved	✅ No other sheets present
+10	Confirm both files are closed after save	Files not open in Excel	✅ No unsaved files or Excel prompts
+11	Check message box	“Pivot data pasted and saved…”	✅ Message displayed
+12	Re-run macro	Files not overwritten if already open or error shown	✅ File exists error handled gracefully
+
+
+
+---
+
+❌ Error Handling Scenarios
+
+Condition	Action	Expected Behavior	Pass/Fail Criteria
+
+Missing template	Run macro	Show message: template not found	✅ Message shown
+Empty Sheet1	Run macro	Show message: "Not enough data"	✅ Message shown, macro exits
+Existing saved file open	Run macro	Handle file in use	✅ Graceful error or skip
+Missing folder path	Run macro	Create folder automatically	✅ Folder created, file saved
+
+
+
+---

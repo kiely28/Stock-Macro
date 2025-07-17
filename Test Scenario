@@ -1,36 +1,144 @@
 
----
-
-🧪 Test Steps and Pass/Fail Criteria
-
-Step	Action Item	Expected Result	Pass/Fail Criteria
-
-1	Open macro-enabled workbook	Workbook opens with Sheet1 present	✅ Sheet1 is visible
-2	Review data in Sheet1	Headers in Row 1, values in rows below	✅ Header columns found
-3	Confirm D:\template.xlsx exists and is not open	File found and ready for use	✅ Template opens without error
-4	Run macro CreatePivot_PlantAsRow_OthersAsValues	Macro runs without error	✅ No debug or halt
-5	Verify PivotOutput sheet is created	New sheet appears with pivot table	✅ Pivot table layout correct
-6	Check Pivot Table	“Plant” in rows, other fields as values (Sum)	✅ All expected columns in pivot
-7	Check copied pivot data (excluding header & grand total)	Range copied accurately	✅ No header or grand total included
-8	Open pivot inv result.xlsx	Confirm pasted data in A2:K11	✅ Data pasted in correct range
-9	Open pivot summary inv results.xlsx	Only Sheet1 saved	✅ No other sheets present
-10	Confirm both files are closed after save	Files not open in Excel	✅ No unsaved files or Excel prompts
-11	Check message box	“Pivot data pasted and saved…”	✅ Message displayed
-12	Re-run macro	Files not overwritten if already open or error shown	✅ File exists error handled gracefully
-
+Perfect! Let's extend your ASP.NET Web Forms Meeting Attendance Logging app to save the form data to SQL Server using a Stored Procedure. Here's a step-by-step guide:
 
 
 ---
 
-❌ Error Handling Scenarios
+✅ WHAT YOU NEED
 
-Condition	Action	Expected Behavior	Pass/Fail Criteria
+SQL Server (Express or full version)
 
-Missing template	Run macro	Show message: template not found	✅ Message shown
-Empty Sheet1	Run macro	Show message: "Not enough data"	✅ Message shown, macro exits
-Existing saved file open	Run macro	Handle file in use	✅ Graceful error or skip
-Missing folder path	Run macro	Create folder automatically	✅ Folder created, file saved
+Connection string to your SQL Server database
+
+A Meetings table
+
+A stored procedure to insert data
+
+Update your btnSave_Click to use ADO.NET
 
 
 
 ---
+
+🔧 STEP 1: Create SQL Table
+
+Open SQL Server Management Studio (SSMS) and run:
+
+CREATE TABLE Meetings (
+    MeetingID INT IDENTITY(1,1) PRIMARY KEY,
+    Title NVARCHAR(200),
+    StartTime DATETIME,
+    EndTime DATETIME,
+    Venue NVARCHAR(200),
+    Organizer NVARCHAR(100)
+);
+
+
+---
+
+⚙️ STEP 2: Create Stored Procedure
+
+Run this SQL to add a stored procedure:
+
+CREATE PROCEDURE InsertMeeting
+    @Title NVARCHAR(200),
+    @StartTime DATETIME,
+    @EndTime DATETIME,
+    @Venue NVARCHAR(200),
+    @Organizer NVARCHAR(100)
+AS
+BEGIN
+    INSERT INTO Meetings (Title, StartTime, EndTime, Venue, Organizer)
+    VALUES (@Title, @StartTime, @EndTime, @Venue, @Organizer);
+END
+
+
+---
+
+📂 STEP 3: Add Connection String in Web.config
+
+In your project, open Web.config and inside <configuration>, add:
+
+<connectionStrings>
+  <add name="MeetingDb" 
+       connectionString="Data Source=YOUR_SERVER_NAME;Initial Catalog=YOUR_DATABASE_NAME;Integrated Security=True;" 
+       providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+> 🔁 Replace YOUR_SERVER_NAME and YOUR_DATABASE_NAME accordingly
+Example: Data Source=.\SQLEXPRESS;Initial Catalog=MeetingDB;Integrated Security=True;
+
+
+
+
+---
+
+🧠 STEP 4: Update Code-Behind (MeetingForm.aspx.cs)
+
+Add these namespaces at the top:
+
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+
+Update btnSave_Click method:
+
+protected void btnSave_Click(object sender, EventArgs e)
+{
+    string title = txtTitle.Text;
+    DateTime startTime = Convert.ToDateTime(txtStart.Text);
+    DateTime endTime = Convert.ToDateTime(txtEnd.Text);
+    string venue = txtVenue.Text;
+    string organizer = txtOrganizer.Text;
+
+    string connStr = ConfigurationManager.ConnectionStrings["MeetingDb"].ConnectionString;
+
+    using (SqlConnection conn = new SqlConnection(connStr))
+    {
+        using (SqlCommand cmd = new SqlCommand("InsertMeeting", conn))
+        {
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@Title", title);
+            cmd.Parameters.AddWithValue("@StartTime", startTime);
+            cmd.Parameters.AddWithValue("@EndTime", endTime);
+            cmd.Parameters.AddWithValue("@Venue", venue);
+            cmd.Parameters.AddWithValue("@Organizer", organizer);
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+            conn.Close();
+
+            lblStatus.Text = "Meeting saved to database successfully!";
+        }
+    }
+}
+
+
+---
+
+✅ STEP 5: Run and Test
+
+1. Run the app (Ctrl + F5)
+
+
+2. Fill out the form and click Save
+
+
+3. Open SQL Server and check Meetings table — your data should be saved!
+
+
+
+
+---
+
+🧪 Next Ideas (optional):
+
+Show saved meetings using DataTables
+
+Add edit/delete functions
+
+Add a meeting attendance log table
+
+
+Want help with any of these next steps?
+

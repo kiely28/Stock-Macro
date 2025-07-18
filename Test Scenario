@@ -142,3 +142,70 @@ Add a meeting attendance log table
 
 Want help with any of these next steps?
 
+----------
+
+Great! If you're using SQL Server Authentication, you'll need to update your connection string in Web.config to include your SQL username and password instead of Integrated Security=True.
+
+
+---
+
+✅ STEP 1: Update Connection String
+
+Open your Web.config and replace the existing connection string with this format:
+
+<connectionStrings>
+  <add name="MeetingDb" 
+       connectionString="Data Source=YOUR_SERVER_NAME;Initial Catalog=YOUR_DATABASE_NAME;User ID=YOUR_USERNAME;Password=YOUR_PASSWORD;" 
+       providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+🔁 Replace:
+
+Placeholder	Description
+
+YOUR_SERVER_NAME	e.g. localhost, .\SQLEXPRESS, or server IP
+YOUR_DATABASE_NAME	The name of your database (e.g. MeetingDB)
+YOUR_USERNAME	Your SQL login username (e.g. sa)
+YOUR_PASSWORD	The corresponding SQL password
+
+
+
+---
+
+✅ Example (SQL Auth):
+
+<connectionStrings>
+  <add name="MeetingDb" 
+       connectionString="Data Source=localhost;Initial Catalog=MeetingDB;User ID=sa;Password=MySecurePass123;" 
+       providerName="System.Data.SqlClient" />
+</connectionStrings>
+
+> 🔒 Never share passwords in source code or public repositories. For production, store sensitive data securely (e.g., in environment variables or encrypted config files).
+
+
+
+
+---
+
+✅ STEP 2: Run and Test
+
+After updating the connection string:
+
+1. Save changes
+
+
+2. Run the project
+
+
+3. Fill out and submit the meeting form
+
+
+4. Check SQL Server — the data should appear in the Meetings table
+
+
+
+
+---
+
+Would you like help adding a grid view or table to show all saved meetings using DataTables + Bootstrap?
+

@@ -209,3 +209,134 @@ After updating the connection string:
 
 Would you like help adding a grid view or table to show all saved meetings using DataTables + Bootstrap?
 
+
+071920
+Here's how you can create a simple ASP.NET Web Forms application in C# with Bootstrap styling that allows users to input:
+
+Agenda
+
+Meeting Date
+
+And automatically generate a Meeting ID
+
+
+
+---
+
+✅ Step-by-Step Instructions
+
+1. Create a new Web Forms project
+
+In Visual Studio:
+
+File → New → Project
+
+Choose ASP.NET Web Application (.NET Framework)
+
+Name it: MeetingApp
+
+Select Web Forms
+
+
+
+---
+
+2. Add Bootstrap for Styling
+
+Add this line in Site.Master inside <head>:
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+
+---
+
+3. Design Default.aspx
+
+Replace the content of Default.aspx with this:
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Default.aspx.cs" Inherits="MeetingApp.Default" %>
+
+<!DOCTYPE html>
+<html>
+<head runat="server">
+    <title>Meeting Entry</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div class="container mt-5">
+            <h2 class="mb-4">Meeting Entry Form</h2>
+
+            <div class="mb-3">
+                <label for="txtAgenda" class="form-label">Agenda:</label>
+                <asp:TextBox ID="txtAgenda" runat="server" CssClass="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label for="txtMeetingDate" class="form-label">Meeting Date:</label>
+                <asp:TextBox ID="txtMeetingDate" runat="server" CssClass="form-control" TextMode="Date" />
+            </div>
+
+            <asp:Button ID="btnSave" runat="server" Text="Save Meeting" CssClass="btn btn-primary" OnClick="btnSave_Click" />
+
+            <hr />
+            <asp:Label ID="lblResult" runat="server" CssClass="mt-3 d-block text-success" />
+        </div>
+    </form>
+</body>
+</html>
+
+
+---
+
+4. Backend Logic: Default.aspx.cs
+
+Open Default.aspx.cs and paste:
+
+using System;
+
+namespace MeetingApp
+{
+    public partial class Default : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+        }
+
+        protected void btnSave_Click(object sender, EventArgs e)
+        {
+            string agenda = txtAgenda.Text.Trim();
+            string meetingDate = txtMeetingDate.Text;
+
+            // Generate meeting ID: "MTG" + timestamp
+            string meetingID = "MTG" + DateTime.Now.ToString("yyyyMMddHHmmss");
+
+            // You can save this to a DB or file (not covered here)
+            lblResult.Text = $"Meeting saved!<br />Agenda: {agenda}<br />Date: {meetingDate}<br />Meeting ID: <strong>{meetingID}</strong>";
+        }
+    }
+}
+
+
+---
+
+✅ Output
+
+A simple form styled with Bootstrap.
+
+When clicking Save Meeting, it displays:
+
+The agenda
+
+The date
+
+The generated unique Meeting ID.
+
+
+
+
+---
+
+Would you like to extend this to store in SQL Server or add attendee logging next?
+
+

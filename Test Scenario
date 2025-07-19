@@ -232,3 +232,214 @@ Would you like to add next:
 
 Let me know and I’ll help you build it!
 
+--- 
+071925 - 3:29PM
+Great! Let's continue your ASP.NET Web Forms Meeting Attendance Logging system by doing the following after saving a meeting:
+
+
+---
+
+✅ NEW FUNCTIONALITY OVERVIEW
+
+After saving the meeting:
+
+1. Redirect to a new page MeetingDetails.aspx
+
+
+2. Pass the Meeting ID and Title
+
+
+3. Show:
+
+🆔 The Meeting ID
+
+📌 The Meeting Title
+
+🔳 Input for Employee ID (tapping)
+
+📋 A table showing tapped employee attendance (auto-refreshing)
+
+
+
+
+
+---
+
+🧱 STEP-BY-STEP IMPLEMENTATION
+
+
+---
+
+📁 1. Create New Web Form MeetingDetails.aspx
+
+In Visual Studio:
+
+Right-click your project → Add → Web Form → name it MeetingDetails.aspx
+
+
+
+---
+
+📄 2. Code for MeetingDetails.aspx
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="MeetingDetails.aspx.cs" Inherits="MeetingDetails" %>
+
+<!DOCTYPE html>
+<html>
+<head runat="server">
+    <title>Meeting Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div class="container mt-5">
+            <h3>Meeting Details</h3>
+            <p><strong>Meeting ID:</strong> <asp:Label ID="lblMeetingID" runat="server" /></p>
+            <p><strong>Title:</strong> <asp:Label ID="lblTitle" runat="server" /></p>
+
+            <div class="mb-3">
+                <label for="txtEmployeeID" class="form-label">Tap / Enter Employee ID</label>
+                <asp:TextBox ID="txtEmployeeID" runat="server" CssClass="form-control" AutoPostBack="true" OnTextChanged="txtEmployeeID_TextChanged" />
+            </div>
+
+            <h5>Attendance Log</h5>
+            <asp:GridView ID="gvAttendance" runat="server" CssClass="table table-bordered table-sm" AutoGenerateColumns="false">
+                <Columns>
+                    <asp:BoundField DataField="EmployeeID" HeaderText="Employee ID" />
+                    <asp:BoundField DataField="Timestamp" HeaderText="Timestamp" DataFormatString="{0:yyyy-MM-dd HH:mm:ss}" />
+                </Columns>
+            </asp:GridView>
+        </div>
+    </form>
+</body>
+</html>
+
+
+---
+
+🧾 3. Code-Behind: MeetingDetails.aspx.cs
+
+using System;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+
+public partial class MeetingDetails : System.Web.UI.Page
+{
+    protected string connStr = ConfigurationManager.ConnectionStrings["MeetingDb"].ConnectionString;
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            lblMeetingID.Text = Request.QueryString["meetingId"];
+            lblTitle.Text = Request.QueryString["title"];
+            LoadAttendance();
+        }
+    }
+
+    protected void txtEmployeeID_TextChanged(object sender, EventArgs e)
+    {
+        string meetingId = lblMeetingID.Text;
+        string employeeId = txtEmployeeID.Text;
+
+        if (!string.IsNullOrWhiteSpace(employeeId))
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                string sql = "INSERT INTO MeetingAttendance (MeetingCode, EmployeeID, Timestamp) VALUES (@MeetingCode, @EmployeeID, GETDATE())";
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@MeetingCode", meetingId);
+                    cmd.Parameters.AddWithValue("@EmployeeID", employeeId);
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            txtEmployeeID.Text = "";
+            LoadAttendance();
+        }
+    }
+
+    private void LoadAttendance()
+    {
+        using (SqlConnection conn = new SqlConnection(connStr))
+        {
+            string sql = "SELECT EmployeeID, Timestamp FROM MeetingAttendance WHERE MeetingCode = @MeetingCode ORDER BY Timestamp DESC";
+            using (SqlCommand cmd = new SqlCommand(sql, conn))
+            {
+                cmd.Parameters.AddWithValue("@MeetingCode", lblMeetingID.Text);
+                conn.Open();
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    DataTable dt = new DataTable();
+                    dt.Load(reader);
+                    gvAttendance.DataSource = dt;
+                    gvAttendance.DataBind();
+                }
+            }
+        }
+    }
+}
+
+
+---
+
+🗃️ 4. SQL Table for Attendance
+
+Run this in SQL Server:
+
+CREATE TABLE MeetingAttendance (
+    AttendanceID INT IDENTITY(1,1) PRIMARY KEY,
+    MeetingCode NVARCHAR(50),
+    EmployeeID NVARCHAR(50),
+    Timestamp DATETIME
+);
+
+
+---
+
+🔄 5. Update the Redirect in MeetingForm.aspx.cs
+
+In your btnSave_Click method after successful insert, replace:
+
+lblStatus.Text = "Meeting saved with ID: " + meetingCode;
+
+With:
+
+Response.Redirect("MeetingDetails.aspx?meetingId=" + meetingCode + "&title=" + Server.UrlEncode(title));
+
+
+---
+
+✅ RESULT
+
+After saving a meeting:
+
+You’re redirected to MeetingDetails.aspx
+
+You see the Meeting ID and Title
+
+You can type or scan an Employee ID
+
+The table shows real-time attendance
+
+
+
+---
+
+Would you like to:
+
+Prevent duplicate entries for the same employee?
+
+Auto-refresh the table every X seconds?
+
+Add employee names from a master table?
+
+
+Let me know and I’ll help you build those features too!
+

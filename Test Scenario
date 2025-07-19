@@ -1,286 +1,73 @@
+Sure! Here's a complete simplified version of your ASP.NET Web Forms application that:
 
-Perfect! Let's extend your ASP.NET Web Forms Meeting Attendance Logging app to save the form data to SQL Server using a Stored Procedure. Here's a step-by-step guide:
-
-
----
-
-✅ WHAT YOU NEED
-
-SQL Server (Express or full version)
-
-Connection string to your SQL Server database
-
-A Meetings table
-
-A stored procedure to insert data
-
-Update your btnSave_Click to use ADO.NET
-
+✅ Removes login/LDAP authentication (for now)
+✅ Keeps the Meeting Form with Bootstrap UI
+✅ Generates a custom Meeting ID (MTG-yyyyMMdd-###)
+✅ Saves data to SQL Server via Stored Procedure using SQL Server Authentication
 
 
 ---
 
-🔧 STEP 1: Create SQL Table
+✅ OVERVIEW
 
-Open SQL Server Management Studio (SSMS) and run:
+What’s included:
 
-CREATE TABLE Meetings (
-    MeetingID INT IDENTITY(1,1) PRIMARY KEY,
-    Title NVARCHAR(200),
-    StartTime DATETIME,
-    EndTime DATETIME,
-    Venue NVARCHAR(200),
-    Organizer NVARCHAR(100)
-);
+MeetingForm.aspx (Bootstrap-based form)
 
+MeetingForm.aspx.cs (Code-behind with ID generation + DB save)
 
----
+Web.config (SQL connection string)
 
-⚙️ STEP 2: Create Stored Procedure
-
-Run this SQL to add a stored procedure:
-
-CREATE PROCEDURE InsertMeeting
-    @Title NVARCHAR(200),
-    @StartTime DATETIME,
-    @EndTime DATETIME,
-    @Venue NVARCHAR(200),
-    @Organizer NVARCHAR(100)
-AS
-BEGIN
-    INSERT INTO Meetings (Title, StartTime, EndTime, Venue, Organizer)
-    VALUES (@Title, @StartTime, @EndTime, @Venue, @Organizer);
-END
-
-
----
-
-📂 STEP 3: Add Connection String in Web.config
-
-In your project, open Web.config and inside <configuration>, add:
-
-<connectionStrings>
-  <add name="MeetingDb" 
-       connectionString="Data Source=YOUR_SERVER_NAME;Initial Catalog=YOUR_DATABASE_NAME;Integrated Security=True;" 
-       providerName="System.Data.SqlClient" />
-</connectionStrings>
-
-> 🔁 Replace YOUR_SERVER_NAME and YOUR_DATABASE_NAME accordingly
-Example: Data Source=.\SQLEXPRESS;Initial Catalog=MeetingDB;Integrated Security=True;
-
+SQL table and stored procedure
 
 
 
 ---
 
-🧠 STEP 4: Update Code-Behind (MeetingForm.aspx.cs)
+📄 1. MeetingForm.aspx (UI Form)
 
-Add these namespaces at the top:
-
-using System.Data;
-using System.Data.SqlClient;
-using System.Configuration;
-
-Update btnSave_Click method:
-
-protected void btnSave_Click(object sender, EventArgs e)
-{
-    string title = txtTitle.Text;
-    DateTime startTime = Convert.ToDateTime(txtStart.Text);
-    DateTime endTime = Convert.ToDateTime(txtEnd.Text);
-    string venue = txtVenue.Text;
-    string organizer = txtOrganizer.Text;
-
-    string connStr = ConfigurationManager.ConnectionStrings["MeetingDb"].ConnectionString;
-
-    using (SqlConnection conn = new SqlConnection(connStr))
-    {
-        using (SqlCommand cmd = new SqlCommand("InsertMeeting", conn))
-        {
-            cmd.CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.AddWithValue("@Title", title);
-            cmd.Parameters.AddWithValue("@StartTime", startTime);
-            cmd.Parameters.AddWithValue("@EndTime", endTime);
-            cmd.Parameters.AddWithValue("@Venue", venue);
-            cmd.Parameters.AddWithValue("@Organizer", organizer);
-
-            conn.Open();
-            cmd.ExecuteNonQuery();
-            conn.Close();
-
-            lblStatus.Text = "Meeting saved to database successfully!";
-        }
-    }
-}
-
-
----
-
-✅ STEP 5: Run and Test
-
-1. Run the app (Ctrl + F5)
-
-
-2. Fill out the form and click Save
-
-
-3. Open SQL Server and check Meetings table — your data should be saved!
-
-
-
-
----
-
-🧪 Next Ideas (optional):
-
-Show saved meetings using DataTables
-
-Add edit/delete functions
-
-Add a meeting attendance log table
-
-
-Want help with any of these next steps?
-
-----------
-
-Great! If you're using SQL Server Authentication, you'll need to update your connection string in Web.config to include your SQL username and password instead of Integrated Security=True.
-
-
----
-
-✅ STEP 1: Update Connection String
-
-Open your Web.config and replace the existing connection string with this format:
-
-<connectionStrings>
-  <add name="MeetingDb" 
-       connectionString="Data Source=YOUR_SERVER_NAME;Initial Catalog=YOUR_DATABASE_NAME;User ID=YOUR_USERNAME;Password=YOUR_PASSWORD;" 
-       providerName="System.Data.SqlClient" />
-</connectionStrings>
-
-🔁 Replace:
-
-Placeholder	Description
-
-YOUR_SERVER_NAME	e.g. localhost, .\SQLEXPRESS, or server IP
-YOUR_DATABASE_NAME	The name of your database (e.g. MeetingDB)
-YOUR_USERNAME	Your SQL login username (e.g. sa)
-YOUR_PASSWORD	The corresponding SQL password
-
-
-
----
-
-✅ Example (SQL Auth):
-
-<connectionStrings>
-  <add name="MeetingDb" 
-       connectionString="Data Source=localhost;Initial Catalog=MeetingDB;User ID=sa;Password=MySecurePass123;" 
-       providerName="System.Data.SqlClient" />
-</connectionStrings>
-
-> 🔒 Never share passwords in source code or public repositories. For production, store sensitive data securely (e.g., in environment variables or encrypted config files).
-
-
-
-
----
-
-✅ STEP 2: Run and Test
-
-After updating the connection string:
-
-1. Save changes
-
-
-2. Run the project
-
-
-3. Fill out and submit the meeting form
-
-
-4. Check SQL Server — the data should appear in the Meetings table
-
-
-
-
----
-
-Would you like help adding a grid view or table to show all saved meetings using DataTables + Bootstrap?
-
-
-071920
-Here's how you can create a simple ASP.NET Web Forms application in C# with Bootstrap styling that allows users to input:
-
-Agenda
-
-Meeting Date
-
-And automatically generate a Meeting ID
-
-
-
----
-
-✅ Step-by-Step Instructions
-
-1. Create a new Web Forms project
-
-In Visual Studio:
-
-File → New → Project
-
-Choose ASP.NET Web Application (.NET Framework)
-
-Name it: MeetingApp
-
-Select Web Forms
-
-
-
----
-
-2. Add Bootstrap for Styling
-
-Add this line in Site.Master inside <head>:
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-
----
-
-3. Design Default.aspx
-
-Replace the content of Default.aspx with this:
-
-<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Default.aspx.cs" Inherits="MeetingApp.Default" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="MeetingForm.aspx.cs" Inherits="MeetingForm" %>
 
 <!DOCTYPE html>
 <html>
 <head runat="server">
-    <title>Meeting Entry</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <title>Meeting Attendance Logging</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
     <form id="form1" runat="server">
         <div class="container mt-5">
-            <h2 class="mb-4">Meeting Entry Form</h2>
+            <div class="card shadow rounded p-4">
+                <h3 class="mb-4">Meeting Attendance Logging</h3>
 
-            <div class="mb-3">
-                <label for="txtAgenda" class="form-label">Agenda:</label>
-                <asp:TextBox ID="txtAgenda" runat="server" CssClass="form-control" />
+                <div class="mb-3">
+                    <label class="form-label">Title / Agenda</label>
+                    <asp:TextBox ID="txtTitle" runat="server" CssClass="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Start Date & Time</label>
+                    <asp:TextBox ID="txtStart" runat="server" TextMode="DateTimeLocal" CssClass="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">End Date & Time</label>
+                    <asp:TextBox ID="txtEnd" runat="server" TextMode="DateTimeLocal" CssClass="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Venue / Location</label>
+                    <asp:TextBox ID="txtVenue" runat="server" CssClass="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Organizer</label>
+                    <asp:TextBox ID="txtOrganizer" runat="server" CssClass="form-control" />
+                </div>
+
+                <asp:Button ID="btnSave" runat="server" Text="Save" CssClass="btn btn-primary" OnClick="btnSave_Click" />
+                <asp:Label ID="lblStatus" runat="server" CssClass="form-text mt-3 text-success" />
             </div>
-
-            <div class="mb-3">
-                <label for="txtMeetingDate" class="form-label">Meeting Date:</label>
-                <asp:TextBox ID="txtMeetingDate" runat="server" CssClass="form-control" TextMode="Date" />
-            </div>
-
-            <asp:Button ID="btnSave" runat="server" Text="Save Meeting" CssClass="btn btn-primary" OnClick="btnSave_Click" />
-
-            <hr />
-            <asp:Label ID="lblResult" runat="server" CssClass="mt-3 d-block text-success" />
         </div>
     </form>
 </body>
@@ -289,54 +76,159 @@ Replace the content of Default.aspx with this:
 
 ---
 
-4. Backend Logic: Default.aspx.cs
-
-Open Default.aspx.cs and paste:
+💡 2. MeetingForm.aspx.cs (Code-behind)
 
 using System;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
 
-namespace MeetingApp
+public partial class MeetingForm : System.Web.UI.Page
 {
-    public partial class Default : System.Web.UI.Page
+    protected void Page_Load(object sender, EventArgs e) { }
+
+    protected void btnSave_Click(object sender, EventArgs e)
     {
-        protected void Page_Load(object sender, EventArgs e)
+        string title = txtTitle.Text;
+        DateTime start = Convert.ToDateTime(txtStart.Text);
+        DateTime end = Convert.ToDateTime(txtEnd.Text);
+        string venue = txtVenue.Text;
+        string organizer = txtOrganizer.Text;
+
+        // Generate MeetingCode: MTG-yyyyMMdd-###
+        string datePart = DateTime.Now.ToString("yyyyMMdd");
+        string meetingCodePrefix = "MTG-" + datePart + "-";
+        int nextSeq = GetNextMeetingSequence(datePart);
+        string meetingCode = meetingCodePrefix + nextSeq.ToString("D3");
+
+        string connStr = ConfigurationManager.ConnectionStrings["MeetingDb"].ConnectionString;
+
+        using (SqlConnection conn = new SqlConnection(connStr))
         {
+            using (SqlCommand cmd = new SqlCommand("InsertMeeting", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MeetingCode", meetingCode);
+                cmd.Parameters.AddWithValue("@Title", title);
+                cmd.Parameters.AddWithValue("@StartTime", start);
+                cmd.Parameters.AddWithValue("@EndTime", end);
+                cmd.Parameters.AddWithValue("@Venue", venue);
+                cmd.Parameters.AddWithValue("@Organizer", organizer);
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+
+                lblStatus.Text = "Meeting saved with ID: " + meetingCode;
+            }
+        }
+    }
+
+    private int GetNextMeetingSequence(string datePart)
+    {
+        int count = 0;
+        string connStr = ConfigurationManager.ConnectionStrings["MeetingDb"].ConnectionString;
+
+        using (SqlConnection conn = new SqlConnection(connStr))
+        {
+            string query = "SELECT COUNT(*) FROM Meetings WHERE MeetingCode LIKE @codePattern";
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@codePattern", "MTG-" + datePart + "-%");
+
+                conn.Open();
+                count = (int)cmd.ExecuteScalar();
+                conn.Close();
+            }
         }
 
-        protected void btnSave_Click(object sender, EventArgs e)
-        {
-            string agenda = txtAgenda.Text.Trim();
-            string meetingDate = txtMeetingDate.Text;
-
-            // Generate meeting ID: "MTG" + timestamp
-            string meetingID = "MTG" + DateTime.Now.ToString("yyyyMMddHHmmss");
-
-            // You can save this to a DB or file (not covered here)
-            lblResult.Text = $"Meeting saved!<br />Agenda: {agenda}<br />Date: {meetingDate}<br />Meeting ID: <strong>{meetingID}</strong>";
-        }
+        return count + 1;
     }
 }
 
 
 ---
 
-✅ Output
+⚙️ 3. Web.config – SQL Server Authentication
 
-A simple form styled with Bootstrap.
+<configuration>
+  <connectionStrings>
+    <add name="MeetingDb"
+         connectionString="Data Source=localhost;Initial Catalog=MeetingDB;User ID=sa;Password=YourPassword123;"
+         providerName="System.Data.SqlClient" />
+  </connectionStrings>
+</configuration>
 
-When clicking Save Meeting, it displays:
+> 🔁 Replace:
 
-The agenda
+localhost → your SQL Server name
 
-The date
+MeetingDB → your database name
 
-The generated unique Meeting ID.
+User ID and Password → your SQL login credentials
+
 
 
 
 
 ---
 
-Would you like to extend this to store in SQL Server or add attendee logging next?
+🗃️ 4. SQL Server Setup
 
+📌 Create Table:
+
+CREATE TABLE Meetings (
+    MeetingID INT IDENTITY(1,1) PRIMARY KEY,
+    MeetingCode NVARCHAR(50),
+    Title NVARCHAR(200),
+    StartTime DATETIME,
+    EndTime DATETIME,
+    Venue NVARCHAR(200),
+    Organizer NVARCHAR(100)
+);
+
+📌 Create Stored Procedure:
+
+CREATE PROCEDURE InsertMeeting
+    @MeetingCode NVARCHAR(50),
+    @Title NVARCHAR(200),
+    @StartTime DATETIME,
+    @EndTime DATETIME,
+    @Venue NVARCHAR(200),
+    @Organizer NVARCHAR(100)
+AS
+BEGIN
+    INSERT INTO Meetings (MeetingCode, Title, StartTime, EndTime, Venue, Organizer)
+    VALUES (@MeetingCode, @Title, @StartTime, @EndTime, @Venue, @Organizer);
+END
+
+
+---
+
+✅ DONE!
+
+You now have a:
+
+🎨 Bootstrap-styled form
+
+🆔 Auto-generated Meeting ID (MTG-yyyyMMdd-###)
+
+💾 SQL Server backend with stored procedure
+
+🔐 SQL Server authentication setup
+
+
+
+---
+
+Would you like to add next:
+
+📋 Table view of saved meetings?
+
+🔍 Search/filter (using DataTables)?
+
+🧍 Attendance entry?
+
+
+Let me know and I’ll help you build it!
 

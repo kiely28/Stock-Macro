@@ -443,3 +443,99 @@ Add employee names from a master table?
 
 Let me know and I’ll help you build those features too!
 
+--- 072225
+
+You can use Excel VBA to loop through the rows in your SAP GUI table control and select the row where the O/H Rate = "CR00", even if that column is read-only. Here's how to do it:
+
+
+---
+
+✅ VBA Macro to Select Row in SAP Table by O/H Rate ("CR00")
+
+Sub SelectRowByOHRate()
+    Dim sapApp As Object
+    Dim sapCon As Object
+    Dim session As Object
+    Dim rowCount As Integer
+    Dim i As Integer
+    Dim targetRate As String
+    Dim ohRate As String
+
+    targetRate = "CR00" ' The O/H Rate you want to find
+
+    ' Get SAP session
+    Set sapApp = GetObject("SAPGUI").GetScriptingEngine
+    Set sapCon = sapApp.Children(0)
+    Set session = sapCon.Children(0)
+
+    ' Get row count of the table control
+    rowCount = session.FindById("wnd[0]/usr/tblSAPLKKBLTAB_OVERHEAD").RowCount
+
+    ' Loop through the table rows
+    For i = 0 To rowCount - 1
+        ' Get the O/H Rate value in column 1 (readonly)
+        ohRate = session.FindById("wnd[0]/usr/tblSAPLKKBLTAB_OVERHEAD").GetCellValue(i, "KOSTL") ' Replace with actual column name
+
+        If Trim(ohRate) = targetRate Then
+            ' Select the row (e.g., click a cell or set cursor)
+            session.FindById("wnd[0]/usr/tblSAPLKKBLTAB_OVERHEAD").GetAbsoluteRow(i).Selected = True
+
+            MsgBox "O/H Rate '" & targetRate & "' found at row: " & i + 1
+            Exit Sub
+        End If
+    Next i
+
+    MsgBox "O/H Rate '" & targetRate & "' not found."
+
+End Sub
+
+
+---
+
+⚠️ Important Notes:
+
+Replace "KOSTL" with the actual technical field name of the O/H Rate column.
+
+You can find this by turning on SAP GUI Scripting Recorder, clicking on the cell, and checking the generated ID.
+
+
+"SAPLKKBLTAB_OVERHEAD" might differ depending on your system.
+
+Use SAP Scripting Recorder to capture exact table ID and field names.
+
+
+The .GetAbsoluteRow(i).Selected = True line can simulate row selection.
+
+
+
+---
+
+📌 To Get Correct Field Name:
+
+1. Open SAP
+
+
+2. Go to S_ALR_87008275
+
+
+3. Open the table view with O/H Rate
+
+
+4. Turn on SAP GUI Scripting Recorder
+
+
+5. Click one of the rows manually (on O/H Rate)
+
+
+6. Stop recording and check the generated script
+
+
+7. Use that field name in place of "KOSTL"
+
+
+
+
+---
+
+Let me know if you want help analyzing your scripting recorder output. You can paste it here and I’ll extract the correct table ID and column name.
+

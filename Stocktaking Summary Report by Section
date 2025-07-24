@@ -565,4 +565,171 @@ Function IsExcluded(value As String, list As Variant) As Boolean
 End Function
 
 
+Update - 12:36 PM
 
+Sub OpenPivotAndPasteAllToTemplate()
+
+    Dim wbData As Workbook
+    Dim wbTemplate As Workbook
+    Dim wsData As Worksheet
+    Dim wsPivot As Worksheet
+    Dim pt As PivotTable
+    Dim pc As PivotCache
+    Dim dataRange As Range
+    Dim lastRow As Long
+    Dim dataBodyRange As Range
+    Dim rowLabelValue As String
+    Dim colIndex As Variant
+    Dim filePathData As String
+    Dim filePathTemplate As String
+    Dim savePath As String
+    Dim pasteTargetD As Range, pasteTargetM As Range
+    Dim pasteTargetO As Range, pasteTargetD18 As Range, pasteTargetM18 As Range, pasteTargetO18 As Range
+    Dim outputArray() As Variant
+    Dim outputCol9() As Variant
+    Dim outputCol10_11() As Variant
+    Dim excludedArray() As Variant
+    Dim excludedCol9() As Variant
+    Dim excludedCol10_11() As Variant
+    Dim i As Long, r As Long, x As Long
+
+    ' File paths
+    filePathData = "D:\inventory results.xlsx"
+    filePathTemplate = "D:\summary section template.xlsx"
+    savePath = "D:\section\"
+
+    ' Open source workbook
+    Set wbData = Workbooks.Open(filePathData)
+    Set wsData = wbData.Sheets(1)
+
+    ' Get last row in data sheet
+    lastRow = wsData.Cells(wsData.Rows.Count, 1).End(xlUp).Row
+    Set dataRange = wsData.Range("A1:AD" & lastRow) ' Adjusted for columns A to AD
+
+    ' Add Pivot worksheet
+    Set wsPivot = wbData.Sheets.Add(After:=wsData)
+    wsPivot.Name = "PivotReport"
+
+    ' Create PivotTable
+    Set pc = wbData.PivotCaches.Create(xlDatabase, dataRange)
+    Set pt = pc.CreatePivotTable(TableDestination:=wsPivot.Range("A3"), TableName:="InventoryPivot")
+
+    ' Row field (Col 5)
+    With pt.PivotFields(wsData.Cells(1, 5).Value)
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+
+    ' Value fields (Cols: 9–14, 16–17, 15, 18)
+    For Each colIndex In Array(9, 10, 11, 12, 13, 14, 16, 17, 15, 18)
+        With pt.PivotFields(wsData.Cells(1, colIndex).Value)
+            .Orientation = xlDataField
+            .Function = xlSum
+            .NumberFormat = "#,##0.00"
+        End With
+    Next colIndex
+
+    ' Get pivot data (exclude headers using DataBodyRange)
+    If Not pt.DataBodyRange Is Nothing Then
+        Set dataBodyRange = pt.DataBodyRange
+    Else
+        MsgBox "No pivot data found.", vbExclamation
+        Exit Sub
+    End If
+
+    ' Arrays
+    ReDim outputArray(1 To dataBodyRange.Rows.Count, 1 To 8)
+    ReDim outputCol9(1 To dataBodyRange.Rows.Count, 1 To 1)
+    ReDim outputCol10_11(1 To dataBodyRange.Rows.Count, 1 To 2)
+    ReDim excludedArray(1 To dataBodyRange.Rows.Count, 1 To 8)
+    ReDim excludedCol9(1 To dataBodyRange.Rows.Count, 1 To 1)
+    ReDim excludedCol10_11(1 To dataBodyRange.Rows.Count, 1 To 2)
+
+    ' Exclude list
+    Dim excludeList As Variant
+    excludeList = Array("proc nli", "proc git", "proc sub con", "lc forwarder")
+
+    r = 0 ' included counter
+    x = 0 ' excluded counter
+
+    For i = 1 To dataBodyRange.Rows.Count
+        rowLabelValue = Trim(LCase(dataBodyRange.Cells(i, 1).Value))
+        If IsExcluded(rowLabelValue, excludeList) = False Then
+            r = r + 1
+            For colIndex = 1 To 8
+                outputArray(r, colIndex) = dataBodyRange.Cells(i, colIndex).Value
+            Next colIndex
+            outputCol9(r, 1) = dataBodyRange.Cells(i, 9).Value
+            outputCol10_11(r, 1) = dataBodyRange.Cells(i, 10).Value
+            outputCol10_11(r, 2) = dataBodyRange.Cells(i, 11).Value
+        Else
+            x = x + 1
+            For colIndex = 1 To 8
+                excludedArray(x, colIndex) = dataBodyRange.Cells(i, colIndex).Value
+            Next colIndex
+            excludedCol9(x, 1) = dataBodyRange.Cells(i, 9).Value
+            excludedCol10_11(x, 1) = dataBodyRange.Cells(i, 10).Value
+            excludedCol10_11(x, 2) = dataBodyRange.Cells(i, 11).Value
+        End If
+    Next i
+
+    ' Resize arrays to actual data counts
+    If r > 0 Then
+        ReDim Preserve outputArray(1 To r, 1 To 8)
+        ReDim Preserve outputCol9(1 To r, 1 To 1)
+        ReDim Preserve outputCol10_11(1 To r, 1 To 2)
+    End If
+    If x > 0 Then
+        ReDim Preserve excludedArray(1 To x, 1 To 8)
+        ReDim Preserve excludedCol9(1 To x, 1 To 1)
+        ReDim Preserve excludedCol10_11(1 To x, 1 To 2)
+    End If
+
+    ' Open template workbook
+    Set wbTemplate = Workbooks.Open(filePathTemplate)
+
+    With wbTemplate.Sheets(1)
+        Set pasteTargetD = .Range("D6")
+        Set pasteTargetM = .Range("M6")
+        Set pasteTargetO = .Range("O6")
+        Set pasteTargetD18 = .Range("D18")
+        Set pasteTargetM18 = .Range("M18")
+        Set pasteTargetO18 = .Range("O18")
+
+        ' Paste included data
+        If r > 0 Then
+            pasteTargetD.Resize(r, 8).Value = outputArray
+            pasteTargetM.Resize(r, 1).Value = outputCol9
+            pasteTargetO.Resize(r, 2).Value = outputCol10_11
+        End If
+
+        ' Paste excluded data
+        If x > 0 Then
+            pasteTargetD18.Resize(x, 8).Value = excludedArray
+            pasteTargetM18.Resize(x, 1).Value = excludedCol9
+            pasteTargetO18.Resize(x, 2).Value = excludedCol10_11
+        End If
+    End With
+
+    ' Save both workbooks as copies
+    wbData.SaveCopyAs savePath & "inventory results.xlsx"
+    wbTemplate.SaveCopyAs savePath & "summary section template.xlsx"
+
+    MsgBox "All data processed and saved successfully to D:\section\", vbInformation
+
+    ' Close files without saving changes to original
+    wbData.Close False
+    wbTemplate.Close False
+
+End Sub
+
+Function IsExcluded(value As String, list As Variant) As Boolean
+    Dim item As Variant
+    For Each item In list
+        If LCase(value) = LCase(Trim(item)) Then
+            IsExcluded = True
+            Exit Function
+        End If
+    Next item
+    IsExcluded = False
+End Function

@@ -356,3 +356,64 @@ Export this to a .bas module file?
 Let me know!
 
 
+11:28 AM
+---
+
+✅ Updated Fix for Pasting Without Pivot Headers:
+
+Replace this block:
+
+Set ptRange = pt.TableRange1
+Set dataBodyRange = ptRange.Offset(1, 0).Resize(ptRange.Rows.Count - 2)
+
+With this improved version:
+
+Dim startRow As Long
+Set ptRange = pt.TableRange1
+
+' Detect first actual data row (skip all rows where the first column is empty or contains "Total" or data field names)
+startRow = 1
+Do While Trim(LCase(ptRange.Cells(startRow, 1).Value)) = "" Or _
+         InStr(1, Trim(LCase(ptRange.Cells(startRow, 1).Value)), "total") > 0 Or _
+         Left(Trim(LCase(ptRange.Cells(startRow, 1).Value)), 4) = "sum " Or _
+         Left(Trim(LCase(ptRange.Cells(startRow, 1).Value)), 4) = "avg "
+    startRow = startRow + 1
+Loop
+
+' Now get the actual data rows only
+Set dataBodyRange = ptRange.Offset(startRow - 1, 0).Resize(ptRange.Rows.Count - startRow)
+
+
+---
+
+🧠 How It Works
+
+Scans each row of the PivotTable starting at the top.
+
+Skips:
+
+Blank rows
+
+Rows with text like "Total" or "Sum of...", "Avg of...", etc.
+
+
+Then assigns dataBodyRange starting from the first valid data row — skipping all headers.
+
+
+
+---
+
+✅ Paste This Fix Into Your Macro
+
+Just replace this section:
+
+Set ptRange = pt.TableRange1
+Set dataBodyRange = ptRange.Offset(1, 0).Resize(ptRange.Rows.Count - 2)
+
+With the new block above.
+
+
+---
+
+
+

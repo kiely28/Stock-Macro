@@ -894,3 +894,36 @@ Function IsExcluded(value As String, list As Variant) As Boolean
     Next item
     IsExcluded = False
 End Function
+
+07-28-25 Sort
+---
+
+✅ Add this right after pasting (before the MsgBox):
+
+' Sort D6:K6 to R6:R16 (included)
+        With .Sort
+            .SortFields.Clear
+            .SortFields.Add Key:=.Range("R6:R16"), Order:=xlDescending
+            .SetRange .Range("D6:R16")
+            .Header = xlNo
+            .MatchCase = False
+            .Orientation = xlTopToBottom
+            .Apply
+        End With
+
+        ' Sort D18:K18 to R18:R21 (excluded)
+        With .Sort
+            .SortFields.Clear
+            .SortFields.Add Key:=.Range("R18:R21"), Order:=xlDescending
+            .SetRange .Range("D18:R21")
+            .Header = xlNo
+            .MatchCase = False
+            .Orientation = xlTopToBottom
+            .Apply
+        End With
+
+
+---
+
+
+

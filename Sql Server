@@ -1,0 +1,57 @@
+Here’s how you can manually create the Tbl_Meetings table in SQL Server using SQL Server Management Studio (SSMS) without writing a script:
+
+
+---
+
+✅ Steps to Manually Create Tbl_Meetings Table in SSMS:
+
+1. Open SSMS and connect to your database server.
+
+
+2. In the Object Explorer, expand your database (e.g., YourDatabaseName).
+
+
+3. Right-click on the Tables folder → click New Table.
+
+
+4. In the table designer, enter the following columns:
+
+Column Name	Data Type	Allow Nulls	Identity
+
+Id	int	Unchecked	Yes (Is Identity: Yes, Seed: 1, Increment: 1)
+MeetingId	nvarchar(50)	Checked or Unchecked (your choice)	No
+Title	nvarchar(255)	Checked or Unchecked (your choice)	No
+StartDate	datetime	Checked or Unchecked (your choice)	No
+EndDate	datetime	Checked or Unchecked (your choice)	No
+
+
+
+5. Set Id as the Primary Key:
+
+Right-click the row selector (left margin) of the Id row.
+
+Click Set Primary Key.
+
+
+
+6. Save the table:
+
+Press Ctrl + S or click File > Save Tbl_Meetings.
+
+Name it Tbl_Meetings and click OK.
+
+
+
+
+
+---
+
+Let me know if you also want to:
+
+Enforce NOT NULL on any column.
+
+Add UNIQUE constraint on MeetingId.
+
+Add default values.
+
+

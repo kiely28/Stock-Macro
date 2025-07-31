@@ -1,0 +1,120 @@
+Thanks! Here's your updated macro with additional conditions for values from Z12 up to Z15 in Column 1 (KSTAR):
+
+
+---
+
+✅ Enhanced Logic:
+
+If Column 1 = "Z11"
+→ Clear Column 2 (LSTAR)
+→ Set Column 8 (WERTN) to 0.1
+
+If Column 1 = "Z12" to "Z15"
+→ Set Column 2 (LSTAR) to 0.25
+→ Clear Column 8 (WERTN)
+
+
+
+---
+
+✅ Updated Full Macro Code
+
+Sub SAP_KP26_CostCenterEdit()
+
+    Dim SapGuiAuto As Object
+    Dim SAPApp As Object
+    Dim SAPCon As Object
+    Dim session As Object
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim costCenter As String
+    Dim rowCount As Long
+    Dim rowIndex As Long
+    Dim valCol1 As String
+
+    ' Connect to SAP GUI
+    On Error Resume Next
+    Set SapGuiAuto = GetObject("SAPGUI")
+    If SapGuiAuto Is Nothing Then
+        MsgBox "SAP is not running.", vbCritical
+        Exit Sub
+    End If
+    Set SAPApp = SapGuiAuto.GetScriptingEngine
+    Set SAPCon = SAPApp.Children(0)
+    Set session = SAPCon.Children(0)
+    On Error GoTo 0
+
+    Set ws = ThisWorkbook.Sheets("Sheet1")
+    lastRow = ws.Cells(ws.Rows.Count, "E").End(xlUp).Row
+
+    For i = 2 To lastRow
+        costCenter = ws.Cells(i, "E").Value
+        If Trim(costCenter) <> "" Then
+            ' Start KP26 transaction
+            session.StartTransaction "KP26"
+            session.findById("wnd[0]/usr/ctxtRKB1D-KOSTL").Text = costCenter
+            session.findById("wnd[0]/tbar[1]/btn[8]").press ' Execute
+
+            ' Wait for table to load
+            Do Until session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell", False) Is Nothing
+                DoEvents
+            Loop
+
+            rowCount = session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").RowCount
+
+            For rowIndex = 0 To rowCount - 1
+                valCol1 = session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").GetCellValue(rowIndex, "KSTAR")
+
+                Select Case valCol1
+                    Case "Z11"
+                        ' Clear LSTAR, set WERTN = 0.1
+                        session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").SetCellValue rowIndex, "LSTAR", ""
+                        session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").SetCellValue rowIndex, "WERTN", "0.1"
+
+                    Case "Z12", "Z13", "Z14", "Z15"
+                        ' Set LSTAR = 0.25, clear WERTN
+                        session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").SetCellValue rowIndex, "LSTAR", "0.25"
+                        session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").SetCellValue rowIndex, "WERTN", ""
+                End Select
+            Next rowIndex
+
+            ' Save confirmation (optional)
+            If MsgBox("Save changes for cost center " & costCenter & "?", vbYesNo) = vbYes Then
+                session.findById("wnd[0]/tbar[0]/btn[11]").press ' Save
+            End If
+
+            ' Back to main screen
+            session.findById("wnd[0]/tbar[0]/btn[3]").press
+        End If
+    Next i
+
+    MsgBox "All cost centers processed successfully."
+
+End Sub
+
+
+---
+
+✅ Summary of Column Actions:
+
+KSTAR Value	Action on LSTAR (Col 2)	Action on WERTN (Col 8)
+
+Z11	Clear	Set 0.1
+Z12-Z15	Set 0.25	Clear
+
+
+
+---
+
+Let me know if you'd like:
+
+to log changes to Excel for audit
+
+to auto-save instead of prompting
+
+to handle errors if the table doesn’t load or is empty
+
+
+Want me to add error handling or Excel logging?
+

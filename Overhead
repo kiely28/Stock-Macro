@@ -1,120 +1,158 @@
-Thanks! Here's your updated macro with additional conditions for values from Z12 up to Z15 in Column 1 (KSTAR):
+Perfect — you're automating a loop from Excel to SAP that works like this:
+
+🔁 Full Flow:
+
+1. Loop through each row in Column E of Excel.
+
+
+2. Open SAP, paste the value into the Cost Center input field.
+
+
+3. Execute.
+
+
+4. Wait for table control to appear.
+
+
+5. In the table:
+
+Check Column 1 (ZR11–ZR15).
+
+Update Column 2 and Column 8 accordingly.
+
+
+
+6. Click Save.
+
+
+7. Repeat for the next value in Column E.
+
+
 
 
 ---
 
-✅ Enhanced Logic:
+✅ Full VBA Macro Code
 
-If Column 1 = "Z11"
-→ Clear Column 2 (LSTAR)
-→ Set Column 8 (WERTN) to 0.1
+This version includes:
 
-If Column 1 = "Z12" to "Z15"
-→ Set Column 2 (LSTAR) to 0.25
-→ Clear Column 8 (WERTN)
+Cost Center input
+
+Table condition checking
+
+Save action
+
+Loop to the next item
 
 
-
----
-
-✅ Updated Full Macro Code
-
-Sub SAP_KP26_CostCenterEdit()
-
+Sub ProcessCostCentersInSAP()
     Dim SapGuiAuto As Object
     Dim SAPApp As Object
     Dim SAPCon As Object
     Dim session As Object
     Dim ws As Worksheet
     Dim lastRow As Long
-    Dim i As Long
+    Dim i As Long, rowIndex As Long
     Dim costCenter As String
-    Dim rowCount As Long
-    Dim rowIndex As Long
-    Dim valCol1 As String
+    Dim rowCount As Integer
+    Dim tablePath As String
 
-    ' Connect to SAP GUI
+    ' Set Excel worksheet
+    Set ws = ThisWorkbook.Sheets(1)
+    lastRow = ws.Cells(ws.Rows.Count, "E").End(xlUp).Row
+
+    ' Connect to SAP
     On Error Resume Next
     Set SapGuiAuto = GetObject("SAPGUI")
-    If SapGuiAuto Is Nothing Then
-        MsgBox "SAP is not running.", vbCritical
-        Exit Sub
-    End If
+    If Err.Number <> 0 Then MsgBox "SAP GUI not running": Exit Sub
     Set SAPApp = SapGuiAuto.GetScriptingEngine
     Set SAPCon = SAPApp.Children(0)
     Set session = SAPCon.Children(0)
     On Error GoTo 0
 
-    Set ws = ThisWorkbook.Sheets("Sheet1")
-    lastRow = ws.Cells(ws.Rows.Count, "E").End(xlUp).Row
-
+    ' Loop through each cost center in column E
     For i = 2 To lastRow
-        costCenter = ws.Cells(i, "E").Value
-        If Trim(costCenter) <> "" Then
-            ' Start KP26 transaction
-            session.StartTransaction "KP26"
-            session.findById("wnd[0]/usr/ctxtRKB1D-KOSTL").Text = costCenter
-            session.findById("wnd[0]/tbar[1]/btn[8]").press ' Execute
+        costCenter = Trim(ws.Cells(i, "E").Value)
+        If costCenter <> "" Then
+            ' Step 1: Enter Cost Center
+            session.findById("wnd[0]/usr/ctxtYourCostCenterField").Text = costCenter
+            session.findById("wnd[0]").sendVKey 0 ' or session.findById("wnd[0]/tbar[1]/btn[8]").press
+            
+            Application.Wait Now + TimeValue("0:00:02") ' Wait for table window
 
-            ' Wait for table to load
-            Do Until session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell", False) Is Nothing
-                DoEvents
-            Loop
-
-            rowCount = session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").RowCount
+            ' Step 2: Table Handling
+            tablePath = "wnd[1]/usr/tblSAPLXXXX" ' Replace with actual table ID
+            rowCount = 10 ' Set to actual number of table rows
 
             For rowIndex = 0 To rowCount - 1
-                valCol1 = session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").GetCellValue(rowIndex, "KSTAR")
+                Dim col1Path As String, col2Path As String, col8Path As String
+                Dim col1Val As String
 
-                Select Case valCol1
-                    Case "Z11"
-                        ' Clear LSTAR, set WERTN = 0.1
-                        session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").SetCellValue rowIndex, "LSTAR", ""
-                        session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").SetCellValue rowIndex, "WERTN", "0.1"
+                col1Path = tablePath & "/txtZCOLUMN1_FIELD[0," & rowIndex & "]"
+                col2Path = tablePath & "/txtZCOLUMN2_FIELD[1," & rowIndex & "]"
+                col8Path = tablePath & "/txtZCOLUMN8_FIELD[7," & rowIndex & "]"
 
-                    Case "Z12", "Z13", "Z14", "Z15"
-                        ' Set LSTAR = 0.25, clear WERTN
-                        session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").SetCellValue rowIndex, "LSTAR", "0.25"
-                        session.findById("wnd[0]/usr/cntlGRID1/shellcont/shell").SetCellValue rowIndex, "WERTN", ""
+                col1Val = UCase(Trim(session.findById(col1Path).Text))
+
+                Select Case col1Val
+                    Case "ZR11"
+                        session.findById(col2Path).Text = ""
+                        session.findById(col8Path).Text = "1"
+                    Case "ZR12", "ZR13", "ZR14", "ZR15"
+                        session.findById(col2Path).Text = "0.25"
+                        session.findById(col8Path).Text = "0"
                 End Select
             Next rowIndex
 
-            ' Save confirmation (optional)
-            If MsgBox("Save changes for cost center " & costCenter & "?", vbYesNo) = vbYes Then
-                session.findById("wnd[0]/tbar[0]/btn[11]").press ' Save
-            End If
+            ' Step 3: Click Save
+            session.findById("wnd[1]/tbar[0]/btn[11]").press ' Or appropriate Save button ID
 
-            ' Back to main screen
-            session.findById("wnd[0]/tbar[0]/btn[3]").press
+            Application.Wait Now + TimeValue("0:00:01") ' Short pause before next cost center
         End If
     Next i
 
-    MsgBox "All cost centers processed successfully."
-
+    MsgBox "All cost centers processed successfully!"
 End Sub
 
 
 ---
 
-✅ Summary of Column Actions:
+🧩 Replace These Placeholders
 
-KSTAR Value	Action on LSTAR (Col 2)	Action on WERTN (Col 8)
+Placeholder	Description
 
-Z11	Clear	Set 0.1
-Z12-Z15	Set 0.25	Clear
+ctxtYourCostCenterField	Cost center input field (e.g. ctxtKOSTL-LOW)
+tblSAPLXXXX	Table control ID (e.g. tblSAPLKPP0TC_1000)
+txtZCOLUMN1_FIELD	Column 1 (key field, e.g. txtKOSTL[0,0])
+txtZCOLUMN2_FIELD	Column 2
+txtZCOLUMN8_FIELD	Column 8
+btn[11]	Save button ID (might be btn[11], or use the scripting recorder to confirm)
 
 
 
 ---
 
-Let me know if you'd like:
+🔍 How to Get Exact Field IDs:
 
-to log changes to Excel for audit
-
-to auto-save instead of prompting
-
-to handle errors if the table doesn’t load or is empty
+1. Go to SAP > Alt + F12 → "Script Recording and Playback".
 
 
-Want me to add error handling or Excel logging?
+2. Record yourself inputting the cost center and modifying the table.
+
+
+3. Stop the recording, open the .vbs file, and copy exact .findById() paths.
+
+
+
+
+---
+
+Let me know if you want:
+
+Error handling for blank or invalid entries.
+
+Scrolling logic for tables with >10 rows.
+
+Export SAP error messages back to Excel.
+
 

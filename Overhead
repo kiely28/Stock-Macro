@@ -319,4 +319,206 @@ Handle multi-page tables (scrolling logic).
 Skip if cost center already exists.
 
 
+Update 1:41PM
+Here is the complete, updated VBA macro that:
+
+1. Loops through Column E of Excel for each Cost Center.
+
+
+2. Inputs it into SAP and executes.
+
+
+3. Handles the SAP table control:
+
+If Column 1 is empty, it inserts 5 default rows.
+
+If Column 1 contains values, it applies business rules for ZR11–ZR15.
+
+
+
+4. Handles dynamic SAP field types:
+
+Automatically switches between ctxt and txt depending on editable state.
+
+
+
+5. Clicks Save, then proceeds to the next Cost Center.
+
+
+
+
+---
+
+✅ Full VBA Code (Dynamic Field Handling Included)
+
+Sub ProcessCostCentersInSAP()
+    Dim SapGuiAuto As Object
+    Dim SAPApp As Object
+    Dim SAPCon As Object
+    Dim session As Object
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long, rowIndex As Long
+    Dim costCenter As String
+    Dim rowCount As Integer
+    Dim tablePath As String
+    Dim col1Val As String
+    Dim col1Path As String
+
+    ' Excel sheet setup
+    Set ws = ThisWorkbook.Sheets(1)
+    lastRow = ws.Cells(ws.Rows.Count, "E").End(xlUp).Row
+
+    ' Connect to SAP GUI
+    On Error Resume Next
+    Set SapGuiAuto = GetObject("SAPGUI")
+    If Err.Number <> 0 Then MsgBox "SAP GUI not running.": Exit Sub
+    Set SAPApp = SapGuiAuto.GetScriptingEngine
+    Set SAPCon = SAPApp.Children(0)
+    Set session = SAPCon.Children(0)
+    On Error GoTo 0
+
+    ' Loop through each Cost Center in Column E
+    For i = 2 To lastRow
+        costCenter = Trim(ws.Cells(i, "E").Value)
+        If costCenter <> "" Then
+            ' Step 1: Input Cost Center
+            session.findById("wnd[0]/usr/ctxtYourCostCenterField").Text = costCenter
+            session.findById("wnd[0]").sendVKey 0
+
+            Application.Wait Now + TimeValue("0:00:02") ' Wait for table
+
+            ' Step 2: Table Processing
+            tablePath = "wnd[1]/usr/tblSAPLXXXX" ' Update this with your actual table ID
+            rowCount = 10 ' Adjust as needed
+
+            Dim isTableEmpty As Boolean
+            isTableEmpty = True
+
+            ' Check if Column 1 is empty
+            For rowIndex = 0 To rowCount - 1
+                col1Path = tablePath & "/txtZCOLUMN1_FIELD[0," & rowIndex & "]"
+                col1Val = UCase(Trim(GetSAPFieldText(session, col1Path)))
+                If col1Val <> "" Then
+                    isTableEmpty = False
+                    Exit For
+                End If
+            Next rowIndex
+
+            If isTableEmpty Then
+                ' Insert 5 rows
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN1_FIELD[0,0]", "ZR6111"
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN2_FIELD[1,0]", ""
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN8_FIELD[7,0]", "0.01"
+
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN1_FIELD[0,1]", "ZR6121"
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN2_FIELD[1,1]", "0.25"
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN8_FIELD[7,1]", ""
+
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN1_FIELD[0,2]", "ZR6131"
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN2_FIELD[1,2]", "0.25"
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN8_FIELD[7,2]", ""
+
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN1_FIELD[0,3]", "ZR6141"
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN2_FIELD[1,3]", "0.25"
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN8_FIELD[7,3]", ""
+
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN1_FIELD[0,4]", "ZR6151"
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN2_FIELD[1,4]", "0.25"
+                SetSAPFieldText session, tablePath & "/txtZCOLUMN8_FIELD[7,4]", ""
+            Else
+                ' Modify existing rows based on ZR11–ZR15
+                For rowIndex = 0 To rowCount - 1
+                    col1Path = tablePath & "/txtZCOLUMN1_FIELD[0," & rowIndex & "]"
+                    col1Val = UCase(Trim(GetSAPFieldText(session, col1Path)))
+
+                    Select Case col1Val
+                        Case "ZR11"
+                            SetSAPFieldText session, tablePath & "/txtZCOLUMN2_FIELD[1," & rowIndex & "]", ""
+                            SetSAPFieldText session, tablePath & "/txtZCOLUMN8_FIELD[7," & rowIndex & "]", "1"
+                        Case "ZR12", "ZR13", "ZR14", "ZR15"
+                            SetSAPFieldText session, tablePath & "/txtZCOLUMN2_FIELD[1," & rowIndex & "]", "0.25"
+                            SetSAPFieldText session, tablePath & "/txtZCOLUMN8_FIELD[7," & rowIndex & "]", "0"
+                    End Select
+                Next rowIndex
+            End If
+
+            ' Step 3: Save
+            session.findById("wnd[1]/tbar[0]/btn[11]").press ' Replace with actual Save button ID
+
+            Application.Wait Now + TimeValue("0:00:01") ' Wait before next iteration
+        End If
+    Next i
+
+    MsgBox "All cost centers processed successfully!"
+End Sub
+
+
+---
+
+🔧 Helper Functions for Dynamic Field Type Handling
+
+' Get value from a SAP field that might be either txt or ctxt
+Function GetSAPFieldText(session As Object, txtPath As String) As String
+    Dim val As String
+    On Error Resume Next
+    val = session.findById(Replace(txtPath, "txt", "ctxt")).Text
+    If Err.Number <> 0 Then
+        Err.Clear
+        val = session.findById(txtPath).Text
+    End If
+    On Error GoTo 0
+    GetSAPFieldText = val
+End Function
+
+' Set value in a SAP field that might be either txt or ctxt
+Sub SetSAPFieldText(session As Object, txtPath As String, newValue As String)
+    On Error Resume Next
+    session.findById(Replace(txtPath, "txt", "ctxt")).Text = newValue
+    If Err.Number <> 0 Then
+        Err.Clear
+        session.findById(txtPath).Text = newValue
+    End If
+    On Error GoTo 0
+End Sub
+
+
+---
+
+🔁 What You Must Update:
+
+Placeholder	Replace With
+
+ctxtYourCostCenterField	Actual Cost Center input field (e.g. ctxtKOSTL-LOW)
+tblSAPLXXXX	Actual Table Control ID (e.g. tblSAPLKPP0TC_1000)
+txtZCOLUMN1_FIELD	Actual SAP field ID for column 1
+txtZCOLUMN2_FIELD	SAP field ID for column 2
+txtZCOLUMN8_FIELD	SAP field ID for column 8
+btn[11]	Confirm Save button ID (use Script Recorder)
+
+
+
+---
+
+🧪 Next Steps
+
+1. Use SAP Script Recorder (Alt + F12 → Script Recording) to capture field IDs.
+
+
+2. Replace placeholders in the code.
+
+
+3. Test the macro on a copy first.
+
+
+
+Let me know if you'd like:
+
+Scroll handling for more than 10 rows.
+
+Logging of status back to Excel.
+
+Error handling or message capture from SAP.
+
+
 

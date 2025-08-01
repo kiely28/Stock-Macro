@@ -1,0 +1,189 @@
+Sure! Below is the complete code for Meeting Creation only, using:
+
+ASP.NET Web Forms (C#)
+
+Bootstrap for styling
+
+SQL Server stored procedure
+
+Auto-generated Meeting ID in the format MTG-YYYYMM-001
+
+
+
+---
+
+✅ 1. SQL Table: Tbl_Meetings
+
+CREATE TABLE Tbl_Meetings (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    MeetingId NVARCHAR(50),
+    Title NVARCHAR(200),
+    StartDate DATETIME,
+    EndDate DATETIME,
+    Venue NVARCHAR(100),
+    Organizer NVARCHAR(100),
+    Remarks NVARCHAR(255)
+);
+
+
+---
+
+✅ 2. Stored Procedure: InsertMeeting
+
+CREATE PROCEDURE InsertMeeting
+    @Title NVARCHAR(200),
+    @StartDate DATETIME,
+    @EndDate DATETIME,
+    @Venue NVARCHAR(100),
+    @Organizer NVARCHAR(100),
+    @Remarks NVARCHAR(255),
+    @MeetingId NVARCHAR(50) OUTPUT
+AS
+BEGIN
+    DECLARE @Prefix NVARCHAR(20) = 'MTG-' + FORMAT(GETDATE(), 'yyyyMM') + '-'
+
+    DECLARE @LastSeq INT = (
+        SELECT ISNULL(MAX(CAST(RIGHT(MeetingId, 3) AS INT)), 0)
+        FROM Tbl_Meetings
+        WHERE MeetingId LIKE @Prefix + '%'
+    )
+
+    DECLARE @NextSeq INT = @LastSeq + 1
+
+    SET @MeetingId = @Prefix + RIGHT('000' + CAST(@NextSeq AS VARCHAR), 3)
+
+    INSERT INTO Tbl_Meetings (MeetingId, Title, StartDate, EndDate, Venue, Organizer, Remarks)
+    VALUES (@MeetingId, @Title, @StartDate, @EndDate, @Venue, @Organizer, @Remarks)
+END
+
+
+---
+
+✅ 3. CreateMeeting.aspx
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="CreateMeeting.aspx.cs" Inherits="YourNamespace.CreateMeeting" %>
+
+<!DOCTYPE html>
+<html>
+<head runat="server">
+    <title>Create Meeting</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <form id="form1" runat="server" class="container mt-5">
+        <h2>Create Meeting</h2>
+        <div class="mb-3">
+            <label for="txtTitle" class="form-label">Title/Agenda</label>
+            <asp:TextBox ID="txtTitle" runat="server" CssClass="form-control" />
+        </div>
+        <div class="mb-3">
+            <label for="txtStartDateTime" class="form-label">Start Date & Time</label>
+            <asp:TextBox ID="txtStartDateTime" runat="server" CssClass="form-control" TextMode="DateTimeLocal" />
+        </div>
+        <div class="mb-3">
+            <label for="txtEndDateTime" class="form-label">End Date & Time</label>
+            <asp:TextBox ID="txtEndDateTime" runat="server" CssClass="form-control" TextMode="DateTimeLocal" />
+        </div>
+        <div class="mb-3">
+            <label for="txtVenue" class="form-label">Venue/Location</label>
+            <asp:TextBox ID="txtVenue" runat="server" CssClass="form-control" />
+        </div>
+        <div class="mb-3">
+            <label for="txtOrganizer" class="form-label">Organizer</label>
+            <asp:TextBox ID="txtOrganizer" runat="server" CssClass="form-control" />
+        </div>
+        <div class="mb-3">
+            <label for="txtRemarks" class="form-label">Remarks</label>
+            <asp:TextBox ID="txtRemarks" runat="server" CssClass="form-control" />
+        </div>
+        <asp:Button ID="btnSave" runat="server" Text="Save Meeting" CssClass="btn btn-primary" OnClick="btnSave_Click" />
+        <br /><br />
+        <asp:Label ID="lblResult" runat="server" CssClass="text-success fw-bold"></asp:Label>
+    </form>
+</body>
+</html>
+
+
+---
+
+✅ 4. CreateMeeting.aspx.cs
+
+using System;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+
+namespace YourNamespace
+{
+    public partial class CreateMeeting : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e) { }
+
+        protected void btnSave_Click(object sender, EventArgs e)
+        {
+            string connStr = ConfigurationManager.ConnectionStrings["MyConn"].ConnectionString;
+            string meetingId = "";
+
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                using (SqlCommand cmd = new SqlCommand("InsertMeeting", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@Title", txtTitle.Text);
+                    cmd.Parameters.AddWithValue("@StartDate", Convert.ToDateTime(txtStartDateTime.Text));
+                    cmd.Parameters.AddWithValue("@EndDate", Convert.ToDateTime(txtEndDateTime.Text));
+                    cmd.Parameters.AddWithValue("@Venue", txtVenue.Text);
+                    cmd.Parameters.AddWithValue("@Organizer", txtOrganizer.Text);
+                    cmd.Parameters.AddWithValue("@Remarks", txtRemarks.Text);
+
+                    SqlParameter outputParam = new SqlParameter("@MeetingId", SqlDbType.NVarChar, 50)
+                    {
+                        Direction = ParameterDirection.Output
+                    };
+                    cmd.Parameters.Add(outputParam);
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                    conn.Close();
+
+                    meetingId = outputParam.Value.ToString();
+
+                    lblResult.Text = $"Meeting saved successfully!<br/>Meeting ID: <strong>{meetingId}</strong>";
+                }
+            }
+        }
+    }
+}
+
+
+---
+
+✅ 5. Web.config (Connection String)
+
+<configuration>
+  <connectionStrings>
+    <add name="MyConn" connectionString="Server=YOUR_SERVER_NAME;Database=YOUR_DATABASE_NAME;User Id=YOUR_USER;Password=YOUR_PASSWORD;" providerName="System.Data.SqlClient" />
+  </connectionStrings>
+</configuration>
+
+> 🔐 Replace YOUR_SERVER_NAME, YOUR_DATABASE_NAME, YOUR_USER, YOUR_PASSWORD accordingly.
+
+
+
+
+---
+
+Let me know when you're ready to proceed with:
+
+Tapping Page
+
+Preventing duplicate entries
+
+LDAP login
+
+Role-based access
+
+
+I’ll guide you step by step.
+

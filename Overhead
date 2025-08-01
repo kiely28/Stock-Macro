@@ -156,3 +156,167 @@ Scrolling logic for tables with >10 rows.
 Export SAP error messages back to Excel.
 
 
+
+
+Update 12:49 PM
+Great — we’ll now enhance the SAP VBA macro with the fallback condition:
+
+> 🔁 If table Column 1 is completely empty, we’ll add predefined values to Rows 1 to 5, as follows:
+
+
+
+Row	Column 1	Column 2	Column 8
+
+1	ZR6111	(blank)	0.01
+2	ZR6121	0.25	(blank)
+3	ZR6131	0.25	(blank)
+4	ZR6141	0.25	(blank)
+5	ZR6151	0.25	(blank)
+
+
+
+---
+
+✅ Updated VBA Macro with Fallback Table Data Insertion
+
+Sub ProcessCostCentersInSAP()
+    Dim SapGuiAuto As Object
+    Dim SAPApp As Object
+    Dim SAPCon As Object
+    Dim session As Object
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long, rowIndex As Long
+    Dim costCenter As String
+    Dim rowCount As Integer
+    Dim tablePath As String
+    Dim col1Val As String
+    Dim col1Path As String
+
+    ' Set Excel worksheet
+    Set ws = ThisWorkbook.Sheets(1)
+    lastRow = ws.Cells(ws.Rows.Count, "E").End(xlUp).Row
+
+    ' Connect to SAP
+    On Error Resume Next
+    Set SapGuiAuto = GetObject("SAPGUI")
+    If Err.Number <> 0 Then MsgBox "SAP GUI not running": Exit Sub
+    Set SAPApp = SapGuiAuto.GetScriptingEngine
+    Set SAPCon = SAPApp.Children(0)
+    Set session = SAPCon.Children(0)
+    On Error GoTo 0
+
+    ' Loop through each cost center in column E
+    For i = 2 To lastRow
+        costCenter = Trim(ws.Cells(i, "E").Value)
+        If costCenter <> "" Then
+            ' Step 1: Enter Cost Center
+            session.findById("wnd[0]/usr/ctxtYourCostCenterField").Text = costCenter
+            session.findById("wnd[0]").sendVKey 0 ' Or: session.findById("wnd[0]/tbar[1]/btn[8]").press
+
+            Application.Wait Now + TimeValue("0:00:02") ' Wait for new screen
+
+            ' Step 2: Table Handling
+            tablePath = "wnd[1]/usr/tblSAPLXXXX" ' Replace with actual table ID
+            rowCount = 10 ' Modify based on your table size
+
+            Dim isTableEmpty As Boolean
+            isTableEmpty = True
+
+            ' Check if any row in Column 1 has data
+            For rowIndex = 0 To rowCount - 1
+                col1Path = tablePath & "/txtZCOLUMN1_FIELD[0," & rowIndex & "]"
+                If session.findById(col1Path).Text <> "" Then
+                    isTableEmpty = False
+                    Exit For
+                End If
+            Next rowIndex
+
+            If isTableEmpty Then
+                ' Table is empty — insert default rows
+                session.findById(tablePath & "/txtZCOLUMN1_FIELD[0,0]").Text = "ZR6111"
+                session.findById(tablePath & "/txtZCOLUMN2_FIELD[1,0]").Text = ""
+                session.findById(tablePath & "/txtZCOLUMN8_FIELD[7,0]").Text = "0.01"
+
+                session.findById(tablePath & "/txtZCOLUMN1_FIELD[0,1]").Text = "ZR6121"
+                session.findById(tablePath & "/txtZCOLUMN2_FIELD[1,1]").Text = "0.25"
+                session.findById(tablePath & "/txtZCOLUMN8_FIELD[7,1]").Text = ""
+
+                session.findById(tablePath & "/txtZCOLUMN1_FIELD[0,2]").Text = "ZR6131"
+                session.findById(tablePath & "/txtZCOLUMN2_FIELD[1,2]").Text = "0.25"
+                session.findById(tablePath & "/txtZCOLUMN8_FIELD[7,2]").Text = ""
+
+                session.findById(tablePath & "/txtZCOLUMN1_FIELD[0,3]").Text = "ZR6141"
+                session.findById(tablePath & "/txtZCOLUMN2_FIELD[1,3]").Text = "0.25"
+                session.findById(tablePath & "/txtZCOLUMN8_FIELD[7,3]").Text = ""
+
+                session.findById(tablePath & "/txtZCOLUMN1_FIELD[0,4]").Text = "ZR6151"
+                session.findById(tablePath & "/txtZCOLUMN2_FIELD[1,4]").Text = "0.25"
+                session.findById(tablePath & "/txtZCOLUMN8_FIELD[7,4]").Text = ""
+            Else
+                ' Table has data — apply ZR11–ZR15 logic
+                For rowIndex = 0 To rowCount - 1
+                    col1Val = UCase(Trim(session.findById(tablePath & "/txtZCOLUMN1_FIELD[0," & rowIndex & "]").Text))
+                    Select Case col1Val
+                        Case "ZR11"
+                            session.findById(tablePath & "/txtZCOLUMN2_FIELD[1," & rowIndex & "]").Text = ""
+                            session.findById(tablePath & "/txtZCOLUMN8_FIELD[7," & rowIndex & "]").Text = "1"
+                        Case "ZR12", "ZR13", "ZR14", "ZR15"
+                            session.findById(tablePath & "/txtZCOLUMN2_FIELD[1," & rowIndex & "]").Text = "0.25"
+                            session.findById(tablePath & "/txtZCOLUMN8_FIELD[7," & rowIndex & "]").Text = "0"
+                    End Select
+                Next rowIndex
+            End If
+
+            ' Step 3: Save
+            session.findById("wnd[1]/tbar[0]/btn[11]").press ' Save button (confirm with recorder)
+
+            Application.Wait Now + TimeValue("0:00:01")
+        End If
+    Next i
+
+    MsgBox "All cost centers processed."
+End Sub
+
+
+---
+
+🔧 Recap of Placeholders to Update:
+
+Placeholder	Description
+
+ctxtYourCostCenterField	Cost center field (e.g. ctxtKOSTL-LOW)
+tblSAPLXXXX	SAP table control ID
+txtZCOLUMN1_FIELD	Field ID of column 1
+txtZCOLUMN2_FIELD	Field ID of column 2
+txtZCOLUMN8_FIELD	Field ID of column 8
+btn[11]	Save button ID
+
+
+
+---
+
+🧪 Next Step:
+
+To test this, run the SAP Script Recorder, then:
+
+1. Go through one cycle manually (cost center input → table check/edit → save).
+
+
+2. Use the .vbs file to confirm the exact field IDs.
+
+
+3. Replace them in the macro.
+
+
+
+Let me know if you'd like the code to:
+
+Log each processed cost center into Excel.
+
+Handle multi-page tables (scrolling logic).
+
+Skip if cost center already exists.
+
+
+

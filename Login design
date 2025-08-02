@@ -350,4 +350,95 @@ Session timeout control
 Login logging / auditing
 
 
+Update 03:32PM
+Here's how you can replace the plain lblError with a Bootstrap 5 alert that:
+
+Displays your custom HTML alert with close button
+
+Uses .alert-warning and .fade show classes
+
+Auto-dismisses after 3 seconds
+
+
+
+---
+
+✅ Updated Login.aspx (Frontend)
+
+Replace the existing asp:Label ID="lblError" with this HTML div:
+
+<div id="errorAlert" runat="server" visible="false" class="alert alert-warning alert-dismissible fade show" role="alert">
+    <strong>Holy guacamole!</strong> You should check in on some of those fields below.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+And below your existing <script> in the <head> or before the </body>, add this JavaScript to auto-dismiss after 3 seconds:
+
+<script>
+    window.addEventListener('load', function () {
+        // Bootstrap validation
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+
+        // Auto-dismiss alert after 3s
+        var alertBox = document.querySelector('.alert-dismissible');
+        if (alertBox) {
+            setTimeout(function () {
+                var alert = bootstrap.Alert.getOrCreateInstance(alertBox);
+                alert.close();
+            }, 3000);
+        }
+    });
+</script>
+
+
+---
+
+✅ Updated Login.aspx.cs (Backend)
+
+Update your btnLogin_Click logic like this:
+
+protected void btnLogin_Click(object sender, EventArgs e)
+{
+    string email = txtEmail.Text.Trim();
+    string password = txtPassword.Text;
+
+    if (email == "admin@example.com" && password == "admin123")
+    {
+        Session["UserEmail"] = email;
+        Response.Redirect("Dashboard.aspx");
+    }
+    else
+    {
+        errorAlert.Visible = true;
+    }
+}
+
+
+---
+
+✅ Final Behavior
+
+If login fails, the alert appears
+
+The alert includes a close button
+
+It will auto-close after 3 seconds
+
+No need for asp:Label anymore for error display
+
+
+
+---
+
+Would you like to make the alert message content dynamic (e.g., set the text in code-behind)?
+
 

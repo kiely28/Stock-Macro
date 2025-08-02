@@ -257,4 +257,97 @@ Validate email format client-side too?
 
 Add a RegularExpressionValidator for server-side fallback?
 
+Update 01:54 for Behind code logic
+Here’s your updated Login.aspx.cs code-behind file that works with the Bootstrap-validated login form.
+
+This version handles:
+
+Server-side validation of the submitted form
+
+Credential check (you can later add DB or LDAP logic)
+
+Redirect to Dashboard on success
+
+Show error label (lblError) on failure
+
+
+
+---
+
+✅ Login.aspx.cs
+
+using System;
+using System.Web;
+using System.Web.UI;
+
+namespace YourNamespace
+{
+    public partial class Login : Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            // Hide error message on initial load
+            if (!IsPostBack)
+            {
+                lblError.Visible = false;
+            }
+        }
+
+        protected void btnLogin_Click(object sender, EventArgs e)
+        {
+            string email = txtEmail.Text.Trim();
+            string password = txtPassword.Text;
+
+            // Example credential check — replace with your real logic
+            if (email == "admin@example.com" && password == "admin123")
+            {
+                // Store info in session if needed
+                Session["UserEmail"] = email;
+
+                // Redirect to dashboard
+                Response.Redirect("Dashboard.aspx");
+            }
+            else
+            {
+                lblError.Text = "Invalid email or password.";
+                lblError.Visible = true;
+            }
+        }
+    }
+}
+
+
+---
+
+🔧 Replace with Your Logic
+
+Replace this logic:
+
+if (email == "admin@example.com" && password == "admin123")
+
+with:
+
+SQL-based login
+
+LDAP authentication
+
+Or any other credential system
+
+
+
+---
+
+⚠️ Note
+
+This server-side code does not depend on the Bootstrap validation — the client-side validation runs first and prevents form submission if invalid.
+
+Let me know if you'd like:
+
+SQL login check
+
+Session timeout control
+
+Login logging / auditing
+
+
 

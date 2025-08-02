@@ -442,3 +442,95 @@ No need for asp:Label anymore for error display
 Would you like to make the alert message content dynamic (e.g., set the text in code-behind)?
 
 
+
+Update 03:40PM
+Here's your updated Login.aspx.cs file with the Bootstrap alert integrated and controlled from the code-behind.
+
+
+---
+
+✅ Login.aspx.cs (Code-Behind)
+
+using System;
+using System.Web;
+using System.Web.UI;
+
+namespace YourNamespace
+{
+    public partial class Login : Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                errorAlert.Visible = false; // hide alert on initial page load
+            }
+        }
+
+        protected void btnLogin_Click(object sender, EventArgs e)
+        {
+            string email = txtEmail.Text.Trim();
+            string password = txtPassword.Text;
+
+            // Sample static login check — replace with actual DB/LDAP logic
+            if (email == "admin@example.com" && password == "admin123")
+            {
+                Session["UserEmail"] = email;
+                Response.Redirect("Dashboard.aspx");
+            }
+            else
+            {
+                errorAlert.Visible = true; // show Bootstrap alert
+            }
+        }
+    }
+}
+
+
+---
+
+✅ Required ASPX Element in Login.aspx
+
+Make sure this <div> exists in your markup with runat="server" and id="errorAlert":
+
+<div id="errorAlert" runat="server" visible="false" class="alert alert-warning alert-dismissible fade show" role="alert">
+    <strong>Holy guacamole!</strong> You should check in on some of those fields below.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+
+---
+
+✅ JavaScript for Auto-Dismiss (Already in Login.aspx)
+
+This should already be included at the bottom of your page:
+
+<script>
+    window.addEventListener('load', function () {
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+
+        // Auto-dismiss alert after 3 seconds
+        var alertBox = document.querySelector('.alert-dismissible');
+        if (alertBox) {
+            setTimeout(function () {
+                var alert = bootstrap.Alert.getOrCreateInstance(alertBox);
+                alert.close();
+            }, 3000);
+        }
+    });
+</script>
+
+
+---
+
+Let me know if you want the alert message (like "Invalid password") to be dynamically set from C# as well.
+

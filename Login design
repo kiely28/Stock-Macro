@@ -534,3 +534,75 @@ This should already be included at the bottom of your page:
 
 Let me know if you want the alert message (like "Invalid password") to be dynamically set from C# as well.
 
+
+
+Update 08/04/25 05:57AM
+Great question — this happens because Bootstrap 5’s alert system requires its JavaScript bundle to be included in your page for:
+
+.alert-dismissible to work (X button)
+
+JavaScript-based dismissal (like auto-close after 3 seconds)
+
+
+
+---
+
+✅ 1. Add Bootstrap 5 JavaScript Bundle
+
+At the bottom of your Login.aspx, just before </body>, add this script:
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+This script includes the necessary Alert component JavaScript from Bootstrap.
+
+
+---
+
+✅ 2. Final Script Block (Auto-Dismiss + Bootstrap Validation)
+
+Also include or update this block right after the bootstrap.bundle.min.js:
+
+<script>
+    window.addEventListener('load', function () {
+        // Bootstrap validation
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+
+        // Auto-dismiss alert after 3 seconds
+        var alertBox = document.querySelector('.alert-dismissible');
+        if (alertBox) {
+            setTimeout(function () {
+                var alert = bootstrap.Alert.getOrCreateInstance(alertBox);
+                alert.close();
+            }, 3000);
+        }
+    });
+</script>
+
+
+---
+
+✅ 3. Summary
+
+Feature	Requirement
+
+X button dismiss	✅ Bootstrap JS (bootstrap.bundle.min.js)
+Auto dismiss alert	✅ JavaScript + Bootstrap.Alert API
+Validation styling	✅ Bootstrap classes + JS
+
+
+
+---
+
+Once you add the Bootstrap JavaScript, both the X button and auto-dismiss after 3 seconds will work.
+
+Would you like this to only show once per postback (and not persist if the user refreshes)?
+

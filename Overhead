@@ -522,3 +522,143 @@ Error handling or message capture from SAP.
 
 
 
+Update 08/04/25 - 
+
+Here's your fully updated Excel VBA macro with the latest logic:
+
+✅ Summary of Behavior
+
+If Column 1 is empty in row 0:
+
+Inserts default values into rows 0–4:
+
+Row 0: ZR6111, blank, 0.01
+
+Row 1–4: ZR6121 to ZR6151, 0.25, blank
+
+
+
+If Column 1 has data, for each row:
+
+If ZR6111 → Column 2 = blank, Column 8 = 0.01
+
+If ZR6121 to ZR6151 → Column 2 = 0.25, Column 8 = blank
+
+
+
+
+---
+
+✅ Complete VBA Macro Code
+
+Sub CheckAndFillOrUpdateSAPTable()
+    Dim sapApp As Object
+    Dim sapCon As Object
+    Dim session As Object
+    Dim field As Object
+    Dim i As Integer
+    Dim col1Id As String, col2Id As String, col8Id As String
+    Dim colValue As String
+    Dim isEmpty As Boolean
+    
+    Dim codes() As Variant
+    codes = Array("ZR6111", "ZR6121", "ZR6131", "ZR6141", "ZR6151")
+
+    On Error Resume Next
+    Set sapApp = GetObject("SAPGUI")
+    Set sapCon = sapApp.GetScriptingEngine.Children(0)
+    Set session = sapCon.Children(0)
+    On Error GoTo 0
+
+    If session Is Nothing Then
+        MsgBox "SAP session not found. Please log in to SAP first.", vbExclamation
+        Exit Sub
+    End If
+
+    ' Check if Column 1 Row 0 is empty
+    On Error Resume Next
+    Set field = session.FindById("usr/tblSAPLZXXXTC_CONTROL/txtZTC_COLUMN1[0,0]")
+    If field Is Nothing Then
+        Set field = session.FindById("usr/tblSAPLZXXXTC_CONTROL/ctxtZTC_COLUMN1[0,0]")
+    End If
+    On Error GoTo 0
+
+    If field Is Nothing Then
+        MsgBox "Column 1 field not found.", vbExclamation
+        Exit Sub
+    End If
+
+    isEmpty = (Trim(field.Text) = "")
+
+    If isEmpty Then
+        ' Insert predefined values to Rows 0–4
+        For i = 0 To 4
+            session.FindById("usr/tblSAPLZXXXTC_CONTROL/ctxtZTC_COLUMN1[0," & i & "]").Text = codes(i)
+            
+            If i = 0 Then
+                session.FindById("usr/tblSAPLZXXXTC_CONTROL/ctxtZTC_COLUMN2[1," & i & "]").Text = ""
+                session.FindById("usr/tblSAPLZXXXTC_CONTROL/ctxtZTC_COLUMN8[7," & i & "]").Text = "0.01"
+            Else
+                session.FindById("usr/tblSAPLZXXXTC_CONTROL/ctxtZTC_COLUMN2[1," & i & "]").Text = "0.25"
+                session.FindById("usr/tblSAPLZXXXTC_CONTROL/ctxtZTC_COLUMN8[7," & i & "]").Text = ""
+            End If
+        Next i
+        MsgBox "Data inserted into rows 0 to 4.", vbInformation
+
+    Else
+        ' Loop through rows and update values if Column 1 has matching ZR61xx codes
+        i = 0
+        Do
+            On Error Resume Next
+            Set field = session.FindById("usr/tblSAPLZXXXTC_CONTROL/txtZTC_COLUMN1[0," & i & "]")
+            If field Is Nothing Then
+                Set field = session.FindById("usr/tblSAPLZXXXTC_CONTROL/ctxtZTC_COLUMN1[0," & i & "]")
+            End If
+            On Error GoTo 0
+
+            If field Is Nothing Then Exit Do
+
+            colValue = UCase(Trim(field.Text))
+            col2Id = "usr/tblSAPLZXXXTC_CONTROL/ctxtZTC_COLUMN2[1," & i & "]"
+            col8Id = "usr/tblSAPLZXXXTC_CONTROL/ctxtZTC_COLUMN8[7," & i & "]"
+
+            Select Case colValue
+                Case "ZR6111"
+                    session.FindById(col2Id).Text = ""
+                    session.FindById(col8Id).Text = "0.01"
+                Case "ZR6121", "ZR6131", "ZR6141", "ZR6151"
+                    session.FindById(col2Id).Text = "0.25"
+                    session.FindById(col8Id).Text = ""
+            End Select
+
+            i = i + 1
+        Loop
+        MsgBox "Existing table rows updated based on ZR61xx logic.", vbInformation
+    End If
+End Sub
+
+
+---
+
+🔧 Replace Before Using
+
+Make sure to replace:
+
+"SAPLZXXXTC_CONTROL" — with your actual SAP Table Control ID
+
+"ZTC_COLUMN1", "ZTC_COLUMN2", "ZTC_COLUMN8" — with your real SAP field names
+
+
+
+---
+
+Let me know if you want:
+
+A confirmation log in Excel
+
+Automatic save or press enter in SAP after edits
+
+
+
+
+

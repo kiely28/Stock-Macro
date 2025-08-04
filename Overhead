@@ -660,5 +660,98 @@ Automatic save or press enter in SAP after edits
 
 
 
+Update 08/05/25
+
+To handle this SAP behavior difference (popup in test environment but no popup in live) using a VBA macro for SAP GUI scripting, you need to:
+
+1. Check if the popup window appears by testing the number or name of open windows.
+
+
+2. If popup exists, input controlling area and press Enter.
+
+
+3. If no popup, continue directly to the main screen.
+
+
+
+
+---
+
+✅ SAP GUI Scripting – VBA Code Example
+
+This macro assumes you're using SAP GUI Scripting with the SAP GUI open:
+
+Sub RunTCodeWithControlArea()
+
+    Dim SapGuiAuto As Object
+    Dim SAPApp As Object
+    Dim SAPCon As Object
+    Dim session As Object
+    Dim popupWindowFound As Boolean
+    Dim i As Integer
+
+    ' Attach to running SAP session
+    Set SapGuiAuto = GetObject("SAPGUI")
+    Set SAPApp = SapGuiAuto.GetScriptingEngine
+    Set SAPCon = SAPApp.Children(0)
+    Set session = SAPCon.Children(0)
+
+    ' Enter TCode
+    session.findById("wnd[0]/tbar[0]/okcd").Text = "YOUR_TCODE"  ' Replace with your TCode
+    session.findById("wnd[0]/tbar[0]/okcd").caretPosition = Len("YOUR_TCODE")
+    session.findById("wnd[0]").sendVKey 0
+    Application.Wait Now + TimeValue("0:00:01")  ' Wait 1 sec
+
+    ' Check for popup window (usually wnd[1])
+    popupWindowFound = False
+    For i = 1 To session.Children.Count - 1
+        If session.Children(i).Type = "GuiModalWindow" Then
+            popupWindowFound = True
+            Exit For
+        End If
+    Next i
+
+    If popupWindowFound Then
+        ' Input controlling area (adjust ID as needed)
+        session.findById("wnd[1]/usr/ctxtCORGA").Text = "1000"   ' Replace with actual controlling area
+        session.findById("wnd[1]").sendVKey 0
+    End If
+
+    ' Now the TCode screen is ready
+
+    MsgBox "TCode processed successfully."
+
+End Sub
+
+
+---
+
+🔎 How It Works
+
+session.Children checks for open windows.
+
+SAP modal windows (popups) usually have wnd[1].
+
+If popup is found, it inputs "1000" as controlling area.
+
+If not, it assumes the screen went directly to the display TCode.
+
+
+
+---
+
+🛠 Notes
+
+Replace "YOUR_TCODE" with your actual TCode (e.g., KSB1).
+
+Replace "wnd[1]/usr/ctxtCORGA" with the actual control name. Use SAP Script Recorder or GUI Scripting tools to get the exact ID.
+
+Add error handling if needed (e.g., popup not behaving consistently).
+
+
+Would you like me to help identify the exact field ID (ctxtCORGA or similar) for your popup window?
+
+
+
 
 

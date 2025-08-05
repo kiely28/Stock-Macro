@@ -1,0 +1,104 @@
+Great — to paste as percentage with 2 decimal places, we’ll adjust the macro so that:
+
+Values are pasted manually (not via .Value = .Value).
+
+Format is explicitly set to Percentage with 2 decimal places.
+
+
+
+---
+
+✅ Updated Macro with Formatting as Percentage (2 Decimal Places)
+
+Sub OpenAndCopyMultipleRangesFormatted()
+    Dim folderPath As String
+    Dim fileName As String
+    Dim filePath As String
+    Dim fileCount As Integer
+    Dim wbSource As Workbook
+    Dim wsSource As Worksheet
+    Dim wsTarget As Worksheet
+
+    ' Set folder path
+    folderPath = "D:\Coefficient\"
+
+    ' Locate the only .xlsx file
+    fileName = Dir(folderPath & "*.xlsx")
+    Do While fileName <> ""
+        fileCount = fileCount + 1
+        filePath = folderPath & fileName
+        fileName = Dir
+    Loop
+
+    ' Check file count
+    If fileCount = 0 Then
+        MsgBox "No .xlsx file found in the folder.", vbExclamation
+        Exit Sub
+    ElseIf fileCount > 1 Then
+        MsgBox "More than one .xlsx file found. Please ensure only one exists.", vbExclamation
+        Exit Sub
+    End If
+
+    ' Open source workbook and sheets
+    Set wbSource = Workbooks.Open(filePath)
+    Set wsSource = wbSource.Sheets(1) ' source sheet
+    Set wsTarget = ThisWorkbook.Sheets("Sheet2") ' target sheet
+
+    ' === Define Copy and Paste operations ===
+    CopyAndFormat wsSource.Range("D32:E38"), wsTarget.Range("F2")
+    CopyAndFormat wsSource.Range("F32:G38"), wsTarget.Range("F9")
+    CopyAndFormat wsSource.Range("H32:I38"), wsTarget.Range("F16")
+    CopyAndFormat wsSource.Range("H32:I38"), wsTarget.Range("F23")
+    CopyAndFormat wsSource.Range("H32:I38"), wsTarget.Range("F30")
+    CopyAndFormat wsSource.Range("H32:I38"), wsTarget.Range("F37")
+    CopyAndFormat wsSource.Range("J32:K38"), wsTarget.Range("F44")
+
+    ' Close source workbook
+    wbSource.Close SaveChanges:=False
+
+    MsgBox "All ranges copied and formatted as percentages with 2 decimals!"
+End Sub
+
+' === Helper Sub to copy values and format ===
+Private Sub CopyAndFormat(srcRange As Range, tgtStartCell As Range)
+    Dim r As Long, c As Long
+    For r = 1 To srcRange.Rows.Count
+        For c = 1 To srcRange.Columns.Count
+            With tgtStartCell.Offset(r - 1, c - 1)
+                .Value = srcRange.Cells(r, c).Value
+                .NumberFormat = "0.00%"
+            End With
+        Next c
+    Next r
+End Sub
+
+
+---
+
+✅ How to Use
+
+1. Open your .xlsm file.
+
+
+2. Press Alt + F11, insert a new Module.
+
+
+3. Paste the code above.
+
+
+4. Press F5 or use Alt + F8 and run OpenAndCopyMultipleRangesFormatted.
+
+
+
+
+---
+
+📝 Notes:
+
+All pasted data will be converted to percentage format with 2 decimal places, e.g., 0.25 becomes 25.00%.
+
+If the source data is already in percentage format (like 25%), the formatting will just enforce two decimal places.
+
+
+Let me know if you want to paste values only (no formulas) or ignore blank cells.
+

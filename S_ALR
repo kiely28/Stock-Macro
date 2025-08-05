@@ -102,3 +102,253 @@ If the source data is already in percentage format (like 25%), the formatting wi
 
 Let me know if you want to paste values only (no formulas) or ignore blank cells.
 
+
+08/06/25 Update 05:49AM
+Great! Here's how to use Conditional Formatting in Excel to highlight Column H based on its value (1, 2, 3, or 4), following your logic:
+
+
+---
+
+✅ Step-by-Step: Highlight Column H Based on Value
+
+1. Select the cells
+
+Select the range you want to apply formatting to — for example:
+H2:H50
+
+
+2. Go to Conditional Formatting
+
+Click on the Home tab → Conditional Formatting → New Rule
+
+
+
+---
+
+🔷 Add Rules One by One:
+
+✅ Rule for Value = 1 (F>0%, G>0%)
+
+1. Select: “Format only cells that contain”
+
+
+2. Rule:
+
+Cell Value → equal to → 1
+
+
+
+3. Click Format → choose Green fill (or any color)
+
+
+4. Click OK
+
+
+
+
+---
+
+✅ Rule for Value = 2 (F=0%, G>0%)
+
+1. New Rule → “Format only cells that contain”
+
+
+2. Cell Value → equal to → 2
+
+
+3. Format → choose Blue fill
+
+
+4. OK
+
+
+
+
+---
+
+✅ Rule for Value = 3 (F>0%, G=0%)
+
+1. New Rule → Cell Value = 3
+
+
+2. Format → Orange fill
+
+
+3. OK
+
+
+
+
+---
+
+✅ Rule for Value = 4 (F=0%, G=0%)
+
+1. New Rule → Cell Value = 4
+
+
+2. Format → Red fill
+
+
+3. OK
+
+
+
+
+---
+
+🎉 Result:
+
+Now, column H will:
+
+Green for rows where both F & G > 0
+
+Blue for F = 0 and G > 0
+
+Orange for F > 0 and G = 0
+
+Red for both = 0
+
+
+
+---
+
+Would you like to apply similar formatting to entire rows instead of just column H?
+
+
+
+
+*****
+Yes! You can achieve this same logic using an Excel formula in column H, without using VBA.
+
+
+---
+
+✅ Your Logic Recap:
+
+You want to evaluate columns F and G, and in column H, assign a value based on:
+
+F (%)	G (%)	H (Result)
+
+= 0.00%	> 0.00%	2
+> 0.00%	= 0.00%	3
+= 0.00%	= 0.00%	4
+> 0.00%	> 0.00%	1
+
+
+
+---
+
+✅ Formula (for cell H2):
+
+Paste this into H2, then drag it down:
+
+=IF(AND(F2=0,G2>0),2,
+ IF(AND(F2>0,G2=0),3,
+ IF(AND(F2=0,G2=0),4,
+ IF(AND(F2>0,G2>0),1,"")))
+
+
+---
+
+✅ Explanation:
+
+F2 and G2 are assumed to be percentages (e.g., 0.25 = 25%)
+
+The formula uses nested IF and AND to check all conditions.
+
+Returns "" (blank) if none match (which shouldn't happen in your case).
+
+
+
+---
+
+📌 Tip:
+
+Make sure that cells in columns F and G are numeric percentage values, not text (like "25%").
+
+You can apply this formula from H2 down to H50 (or however many rows you're working with).
+
+
+Would you like to highlight the values using conditional formatting too?
+
+*****
+Perfect! Based on your full logic for updating column H in Sheet2, here's the breakdown:
+
+
+---
+
+✅ Conditions:
+
+Column F	Column G	Column H (Set To)
+
+= 0.00%	> 0.00%	2
+> 0.00%	= 0.00%	3
+= 0.00%	= 0.00%	4
+> 0.00%	> 0.00%	1
+
+
+
+---
+
+✅ Final VBA Code:
+
+Sub SetValueInColumnH()
+    Dim ws As Worksheet
+    Dim i As Long
+    Dim valF As Double
+    Dim valG As Double
+
+    Set ws = ThisWorkbook.Sheets("Sheet2")
+
+    ' Loop from row 2 to 50
+    For i = 2 To 50
+        valF = ws.Cells(i, "F").Value
+        valG = ws.Cells(i, "G").Value
+
+        ' Apply logic based on F and G
+        Select Case True
+            Case valF = 0 And valG > 0
+                ws.Cells(i, "H").Value = 2
+            Case valF > 0 And valG = 0
+                ws.Cells(i, "H").Value = 3
+            Case valF = 0 And valG = 0
+                ws.Cells(i, "H").Value = 4
+            Case valF > 0 And valG > 0
+                ws.Cells(i, "H").Value = 1
+        End Select
+    Next i
+
+    MsgBox "Column H updated based on all conditions."
+End Sub
+
+
+---
+
+✅ How to Use:
+
+1. Open the VBA Editor (Alt + F11)
+
+
+2. Insert a new Module if needed.
+
+
+3. Paste the code.
+
+
+4. Run SetValueInColumnH via Alt + F8.
+
+
+
+
+---
+
+📝 Tip:
+
+This works best if your data in Columns F & G are numeric values formatted as percentages, not text.
+
+If you’re copying from an external file, make sure formulas or formatting don't cause hidden issues — you can paste as values to avoid this.
+
+
+Let me know if you want to extend this logic to column I → column J, etc.
+
+

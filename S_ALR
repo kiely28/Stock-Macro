@@ -536,3 +536,133 @@ Automatically trigger the logic when a button is clicked or workbook is opened
 
 
 
+*****
+UPDATE 05:59AM 08/07/25
+
+Perfect! Here's your full VBA macro that:
+
+1. Loops 7 times over Sheet2!C2:C8 of your Workbook.xlsm
+
+
+2. Inputs each value into SAP's O/H Key field (assuming SAP is open and scripting is enabled)
+
+
+3. Takes a screenshot of the SAP window after each input
+
+
+4. Creates a new Excel workbook
+
+
+5. Adds 1 worksheet per screenshot
+
+
+6. Pastes each screenshot and names the sheet based on the O/H Key value
+
+
+7. Saves the workbook as D:\prooflist.xlsx
+
+
+
+
+---
+
+✅ Final VBA Code
+
+Sub PasteOHKey_Screenshot_SaveToProofList()
+    Dim sapGuiAuto As Object
+    Dim SAPApp As Object
+    Dim SAPCon As Object
+    Dim session As Object
+    Dim ws As Worksheet
+    Dim i As Long
+    Dim ohKeyValue As String
+    
+    Dim wbProof As Workbook
+    Dim shtProof As Worksheet
+    
+    ' Set reference to Sheet2
+    Set ws = ThisWorkbook.Sheets("Sheet2")
+
+    ' Create new workbook for screenshots
+    Set wbProof = Workbooks.Add
+    
+    ' Connect to SAP GUI session
+    On Error Resume Next
+    Set sapGuiAuto = GetObject("SAPGUI")
+    If sapGuiAuto Is Nothing Then
+        MsgBox "SAP GUI is not running."
+        Exit Sub
+    End If
+    Set SAPApp = sapGuiAuto.GetScriptingEngine
+    Set SAPCon = SAPApp.Children(0)
+    Set session = SAPCon.Children(0)
+    On Error GoTo 0
+
+    If session Is Nothing Then
+        MsgBox "No active SAP session found."
+        Exit Sub
+    End If
+
+    ' Loop through rows 2 to 8 in Column C
+    For i = 2 To 8
+        ohKeyValue = Trim(ws.Cells(i, 3).Value) ' Column C
+        
+        If ohKeyValue <> "" Then
+            ' Input value into SAP (change field ID if needed)
+            session.findById("wnd[0]/usr/ctxtOHKEY").Text = ohKeyValue
+            
+            ' Optional: trigger update if needed
+            ' session.findById("wnd[0]").sendVKey 0
+            
+            ' Wait to ensure SAP updated
+            Application.Wait Now + TimeValue("0:00:01")
+            
+            ' Take screenshot using .hardCopy (copies to clipboard)
+            session.findById("wnd[0]").hardCopy
+            
+            ' Add new sheet to proof workbook
+            Set shtProof = wbProof.Sheets.Add(After:=wbProof.Sheets(wbProof.Sheets.Count))
+            On Error Resume Next
+            shtProof.Name = Left(ohKeyValue, 31) ' Max 31 chars
+            On Error GoTo 0
+            
+            ' Paste image from clipboard
+            shtProof.Range("A1").Select
+            shtProof.Paste
+            
+            ' Wait briefly before next
+            Application.Wait Now + TimeValue("0:00:01")
+        End If
+    Next i
+
+    ' Remove default extra sheet if it still exists
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    wbProof.Sheets("Sheet1").Delete
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+
+    ' Save final workbook
+    wbProof.SaveAs Filename:="D:\prooflist.xlsx", FileFormat:=xlOpenXMLWorkbook
+    wbProof.Close SaveChanges:=False
+    
+    MsgBox "Proof list created and saved to D:\prooflist.xlsx"
+End Sub
+
+
+---
+
+🔧 What You Need to Check / Update
+
+What	Where	Notes
+
+SAP Field ID	"wnd[0]/usr/ctxtOHKEY"	Use SAP’s scripting recorder or F1 → Technical Info to verify it
+Save Path	D:\prooflist.xlsx	Make sure the path exists and is writable
+Max Sheet Name	Left(ohKeyValue, 31)	Excel limits sheet names to 31 characters
+
+
+
+---
+
+Let me know if you want to add timestamps, embed text labels, or send the proof workbook via email automatically!
+

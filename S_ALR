@@ -352,3 +352,187 @@ If you’re copying from an external file, make sure formulas or formatting don'
 Let me know if you want to extend this logic to column I → column J, etc.
 
 
+*****
+UPDATE 12:43PM
+
+Got it!
+
+You want the pasted values to be:
+
+Shown with 2 decimal places
+
+Not formatted as percentages (i.e., just normal numbers, like 0.25, not 25.00%)
+
+
+
+---
+
+✅ Updated Version of the Macro
+
+This revised macro:
+
+Opens the only .xlsx file in D:\Coefficient
+
+Copies all your specified ranges
+
+Pastes them into Sheet2 of your .xlsm file
+
+Applies number format with 2 decimal places (not percent)
+
+
+
+---
+
+🔁 Updated VBA Code:
+
+Sub OpenAndCopyWithTwoDecimals()
+    Dim folderPath As String
+    Dim fileName As String
+    Dim filePath As String
+    Dim fileCount As Integer
+    Dim wbSource As Workbook
+    Dim wsSource As Worksheet
+    Dim wsTarget As Worksheet
+
+    ' Set folder path
+    folderPath = "D:\Coefficient\"
+
+    ' Locate the only .xlsx file
+    fileName = Dir(folderPath & "*.xlsx")
+    Do While fileName <> ""
+        fileCount = fileCount + 1
+        filePath = folderPath & fileName
+        fileName = Dir
+    Loop
+
+    ' Validate file count
+    If fileCount = 0 Then
+        MsgBox "No .xlsx file found in the folder.", vbExclamation
+        Exit Sub
+    ElseIf fileCount > 1 Then
+        MsgBox "More than one .xlsx file found. Please ensure only one exists.", vbExclamation
+        Exit Sub
+    End If
+
+    ' Open the source file
+    Set wbSource = Workbooks.Open(filePath)
+    Set wsSource = wbSource.Sheets(1)
+    Set wsTarget = ThisWorkbook.Sheets("Sheet2")
+
+    ' Copy and paste with 2 decimal places (no percent)
+    CopyWithTwoDecimals wsSource.Range("D32:E38"), wsTarget.Range("F2")
+    CopyWithTwoDecimals wsSource.Range("F32:G38"), wsTarget.Range("F9")
+    CopyWithTwoDecimals wsSource.Range("H32:I38"), wsTarget.Range("F16")
+    CopyWithTwoDecimals wsSource.Range("H32:I38"), wsTarget.Range("F23")
+    CopyWithTwoDecimals wsSource.Range("H32:I38"), wsTarget.Range("F30")
+    CopyWithTwoDecimals wsSource.Range("H32:I38"), wsTarget.Range("F37")
+    CopyWithTwoDecimals wsSource.Range("J32:K38"), wsTarget.Range("F44")
+
+    ' Close the source workbook
+    wbSource.Close SaveChanges:=False
+
+    MsgBox "Data copied with 2 decimal places (no percentage format)."
+End Sub
+
+' === Helper Sub to copy values and apply number formatting with 2 decimal places ===
+Private Sub CopyWithTwoDecimals(srcRange As Range, tgtStartCell As Range)
+    Dim r As Long, c As Long
+    For r = 1 To srcRange.Rows.Count
+        For c = 1 To srcRange.Columns.Count
+            With tgtStartCell.Offset(r - 1, c - 1)
+                .Value = srcRange.Cells(r, c).Value
+                .NumberFormat = "0.00"
+            End With
+        Next c
+    Next r
+End Sub
+
+
+---
+
+✅ Result:
+
+Pasted numbers will be plain numbers like 0.25
+
+Formatted as 0.25 not 25.00%
+
+Displayed with 2 decimal places
+
+
+
+---
+
+Let me know if:
+
+You want to multiply percent values first (e.g. convert 25% → 0.25)
+
+Or round numbers before pasting
+
+Or if the source file has formulas you'd like stripped to values only
+
+
+****
+
+Thanks for the clarification!
+
+You're right — if you're seeing long decimal values like 4.30157546910275, then even though the format is set to 2 decimal places, the actual value is still the full precision number.
+
+If you want to actually round the value to 2 decimal places (not just format it), then we need to use Round() in VBA before assigning the value.
+
+
+---
+
+✅ Updated VBA Helper — Round to 2 Decimal Places:
+
+Replace the CopyWithTwoDecimals subroutine with this updated version:
+
+Private Sub CopyWithTwoDecimals(srcRange As Range, tgtStartCell As Range)
+    Dim r As Long, c As Long
+    Dim val As Variant
+
+    For r = 1 To srcRange.Rows.Count
+        For c = 1 To srcRange.Columns.Count
+            val = srcRange.Cells(r, c).Value
+            If IsNumeric(val) Then
+                val = Round(val, 2) ' <-- Round to 2 decimals
+            End If
+
+            With tgtStartCell.Offset(r - 1, c - 1)
+                .Value = val
+                .NumberFormat = "0.00" ' Format with 2 decimal places
+            End With
+        Next c
+    Next r
+End Sub
+
+
+---
+
+🔁 No changes needed in the main macro — just replace the helper subroutine.
+
+
+---
+
+✅ Now it will:
+
+Round values to exactly 2 decimal places
+
+Display and store the number like 4.30, not 4.30157546910275
+
+Work correctly even if source cells contain high-precision numbers
+
+
+
+---
+
+Let me know if you also want to:
+
+Paste only non-zero values
+
+Treat blank cells differently
+
+Automatically trigger the logic when a button is clicked or workbook is opened
+
+
+
+

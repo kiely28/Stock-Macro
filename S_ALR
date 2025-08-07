@@ -666,3 +666,63 @@ Max Sheet Name	Left(ohKeyValue, 31)	Excel limits sheet names to 31 characters
 
 Let me know if you want to add timestamps, embed text labels, or send the proof workbook via email automatically!
 
+
+***
+
+Got it! You're asking how to paste content from the clipboard (like an image or SAP screenshot via .hardCopy) into Excel cell A1 using ActiveWindow.Paste.
+
+However, ActiveWindow.Paste is not valid in Excel for pasting into a specific cell.
+
+
+---
+
+✅ Correct Way to Paste into Excel A1:
+
+To paste clipboard content (e.g. a screenshot copied via SAP .hardCopy) into cell A1, use:
+
+ActiveSheet.Range("A1").Select
+ActiveSheet.Paste
+
+Or for better control (and avoid needing .Select), use:
+
+Dim pic As Picture
+Set pic = ActiveSheet.Pictures.Paste
+pic.Top = ActiveSheet.Range("A1").Top
+pic.Left = ActiveSheet.Range("A1").Left
+
+This places the pasted image exactly over cell A1.
+
+
+---
+
+❌ Why not ActiveWindow.Paste?
+
+ActiveWindow.Paste works in Word, not in Excel.
+
+In Excel, ActiveWindow does not have a Paste method.
+
+
+
+---
+
+🧪 Complete Working Snippet
+
+' Make sure the correct sheet is active
+shtProof.Activate
+
+' Paste from clipboard into A1
+shtProof.Range("A1").Select
+shtProof.Paste
+
+Or preferred image-control version:
+
+Dim pastedPic As Picture
+Set pastedPic = shtProof.Pictures.Paste
+pastedPic.Top = shtProof.Range("A1").Top
+pastedPic.Left = shtProof.Range("A1").Left
+
+
+---
+
+Let me know if you want to paste text instead of an image, or paste into a comment, shape, or elsewhere!
+

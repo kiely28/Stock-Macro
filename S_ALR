@@ -726,3 +726,145 @@ pastedPic.Left = shtProof.Range("A1").Left
 
 Let me know if you want to paste text instead of an image, or paste into a comment, shape, or elsewhere!
 
+
+
+UPDATE 08/08/25 - 05:50AM
+
+Here’s the integrated version of your original code, using Windows API and Alt+PrintScreen (SendKeys) instead of .hardCopy, with one screenshot per OH Key value from Sheet2!C2:C8, pasted into separate sheets, and saved as D:\prooflist_alt.xlsx.
+
+
+---
+
+✅ Full Integrated VBA Code:
+
+#If VBA7 Then
+    Private Declare PtrSafe Function FindWindow Lib "user32" Alias "FindWindowA" _
+        (ByVal lpClassName As String, ByVal lpWindowName As String) As LongPtr
+#Else
+    Private Declare Function FindWindow Lib "user32" Alias "FindWindowA" _
+        (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
+#End If
+
+Sub PasteOHKey_Screenshot_SaveToProofList_Alt()
+    Dim sapGuiAuto As Object
+    Dim SAPApp As Object
+    Dim SAPCon As Object
+    Dim session As Object
+    Dim ws As Worksheet
+    Dim i As Long
+    Dim ohKeyValue As String
+
+    Dim wbProof As Workbook
+    Dim shtProof As Worksheet
+    Dim hwnd As LongPtr
+    
+    ' Set reference to Sheet2
+    Set ws = ThisWorkbook.Sheets("Sheet2")
+
+    ' Create new workbook for screenshots
+    Set wbProof = Workbooks.Add
+
+    ' Connect to SAP GUI session
+    On Error Resume Next
+    Set sapGuiAuto = GetObject("SAPGUI")
+    If sapGuiAuto Is Nothing Then
+        MsgBox "SAP GUI is not running."
+        Exit Sub
+    End If
+    Set SAPApp = sapGuiAuto.GetScriptingEngine
+    Set SAPCon = SAPApp.Children(0)
+    Set session = SAPCon.Children(0)
+    On Error GoTo 0
+
+    If session Is Nothing Then
+        MsgBox "No active SAP session found."
+        Exit Sub
+    End If
+
+    ' Get SAP window handle
+    hwnd = FindWindow(vbNullString, "SAP Easy Access") ' Update if SAP has custom window title
+    If hwnd = 0 Then
+        MsgBox "SAP window not found."
+        Exit Sub
+    End If
+
+    ' Loop through rows 2 to 8 in Column C
+    For i = 2 To 8
+        ohKeyValue = Trim(ws.Cells(i, 3).Value) ' Column C
+        
+        If ohKeyValue <> "" Then
+            ' Input value into SAP
+            session.findById("wnd[0]/usr/ctxtOHKEY").Text = ohKeyValue
+            
+            ' Optional: trigger SAP update if needed
+            ' session.findById("wnd[0]").sendVKey 0
+
+            ' Wait to ensure SAP updates
+            Application.Wait Now + TimeValue("0:00:01")
+            
+            ' Activate SAP and simulate Alt+PrintScreen
+            AppActivate "SAP Easy Access"
+            Application.SendKeys "%{PRTSC}", True
+
+            ' Wait for clipboard to receive the screenshot
+            Application.Wait Now + TimeValue("0:00:01")
+
+            ' Create a new sheet
+            Set shtProof = wbProof.Sheets.Add(After:=wbProof.Sheets(wbProof.Sheets.Count))
+            On Error Resume Next
+            shtProof.Name = Left(ohKeyValue, 31)
+            On Error GoTo 0
+
+            ' Paste screenshot into the sheet
+            shtProof.Range("A1").Select
+            shtProof.Paste
+            
+            ' Wait briefly before next loop
+            Application.Wait Now + TimeValue("0:00:01")
+        End If
+    Next i
+
+    ' Remove default extra sheet if exists
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    wbProof.Sheets("Sheet1").Delete
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+
+    ' Save final workbook
+    wbProof.SaveAs Filename:="D:\prooflist_alt.xlsx", FileFormat:=xlOpenXMLWorkbook
+    wbProof.Close SaveChanges:=False
+
+    MsgBox "Proof list created and saved to D:\prooflist_alt.xlsx"
+End Sub
+
+
+---
+
+📌 Notes:
+
+Assumes SAP window title is "SAP Easy Access". Change this line if needed:
+
+hwnd = FindWindow(vbNullString, "SAP Easy Access")
+
+Uses AppActivate + SendKeys "%{PRTSC}" to copy only the SAP window.
+
+You may need to keep SAP GUI window visible and not minimized for reliable screenshots.
+
+The screenshots are pasted directly into Excel sheets named after the OH Key (limited to 31 characters).
+
+
+
+---
+
+Let me know if you want:
+
+To skip empty rows automatically
+
+To add timestamps or watermark on screenshots
+
+To support dynamic SAP window titles
+
+
+
+

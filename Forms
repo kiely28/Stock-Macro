@@ -1,0 +1,77 @@
+To check if WinActor has finished running from your VB.NET application, you can use the Process.WaitForExit() method. This allows your app to:
+
+✅ Start WinActor
+⏳ Wait while the scenario runs
+✅ Resume execution after WinActor closes
+
+
+---
+
+✅ Updated VB.NET Code Example
+
+Imports System.Diagnostics
+
+Public Class Form1
+
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        Dim winActorPath As String = "C:\Program Files (x86)\WinActor\WinActor.exe" ' Adjust if different
+        Dim scenarioPath As String = "D:\Scenarios\MyScenario.ums5" ' Adjust your .ums5 file path
+
+        If IO.File.Exists(winActorPath) AndAlso IO.File.Exists(scenarioPath) Then
+            Try
+                Dim proc As New Process()
+                proc.StartInfo.FileName = winActorPath
+                proc.StartInfo.Arguments = """" & scenarioPath & """"
+                proc.Start()
+
+                ' Wait for WinActor process to exit
+                proc.WaitForExit()
+
+                ' After WinActor finishes
+                MessageBox.Show("WinActor scenario completed.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+            Catch ex As Exception
+                MessageBox.Show("Error: " & ex.Message)
+            End Try
+        Else
+            MessageBox.Show("WinActor or scenario file not found.")
+        End If
+    End Sub
+
+End Class
+
+
+---
+
+🔍 What WaitForExit() Does
+
+The app pauses until the WinActor process exits.
+
+Once WinActor closes, your VB.NET app continues (e.g., shows a message or performs next steps).
+
+
+
+---
+
+⏱ Optional: Add a Timeout
+
+If you want to prevent freezing forever, you can wait for a maximum number of milliseconds:
+
+If proc.WaitForExit(60000) Then ' Waits up to 60 seconds
+    MessageBox.Show("WinActor finished within 60 seconds.")
+Else
+    MessageBox.Show("Timeout: WinActor is still running.")
+End If
+
+
+---
+
+Let me know if you want to:
+
+Run WinActor in silent mode
+
+Read output from the scenario
+
+Or launch multiple scenarios in sequence
+
+

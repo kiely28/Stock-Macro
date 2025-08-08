@@ -753,5 +753,84 @@ Would you like me to help identify the exact field ID (ctxtCORGA or similar) for
 
 
 
+Update 03:08 08/08/25
+
+The error "bad index type for collection access" typically happens when trying to access a collection like session.Children(i) incorrectly — usually because session.Children is not the object you think it is.
+
+In SAP GUI Scripting:
+
+session doesn't have a Children collection like a GUI container would.
+
+session.findById("wnd[1]") is the correct way to check for a popup window, if it exists.
+
+
+
+---
+
+✅ Fixed Version of Your Macro
+
+Here’s how to safely check if wnd[1] (the popup) exists, and handle the controlling area input:
+
+Sub RunTCodeWithControlArea()
+
+    Dim SapGuiAuto As Object
+    Dim SAPApp As Object
+    Dim SAPCon As Object
+    Dim session As Object
+    Dim popupExists As Boolean
+
+    On Error GoTo ErrHandler
+
+    ' Attach to running SAP session
+    Set SapGuiAuto = GetObject("SAPGUI")
+    Set SAPApp = SapGuiAuto.GetScriptingEngine
+    Set SAPCon = SAPApp.Children(0)
+    Set session = SAPCon.Children(0)
+
+    ' Enter TCode
+    session.findById("wnd[0]/tbar[0]/okcd").Text = "YOUR_TCODE"  ' Replace with your TCode
+    session.findById("wnd[0]/tbar[0]/okcd").caretPosition = Len("YOUR_TCODE")
+    session.findById("wnd[0]").sendVKey 0
+
+    ' Wait for SAP to respond
+    Application.Wait Now + TimeValue("0:00:01")
+
+    ' Try to check if popup window (wnd[1]) exists
+    popupExists = False
+    On Error Resume Next
+    popupExists = Not session.findById("wnd[1]", False) Is Nothing
+    On Error GoTo 0
+
+    If popupExists Then
+        ' Input controlling area
+        session.findById("wnd[1]/usr/ctxtCORGA").Text = "1000"   ' Change as needed
+        session.findById("wnd[1]").sendVKey 0
+    End If
+
+    MsgBox "TCode processed successfully."
+
+    Exit Sub
+
+ErrHandler:
+    MsgBox "Error occurred: " & Err.Description
+
+End Sub
+
+
+---
+
+✅ Explanation of Key Fixes
+
+session.Children(i) → Removed; instead, we safely try accessing wnd[1] using findById("wnd[1]", False).
+
+On Error Resume Next is used only temporarily to check if wnd[1] exists without raising an error.
+
+popupExists = Not session.findById("wnd[1]", False) Is Nothing is a safe way to check for a modal window.
+
+
+
+---
+
+Let me know if your popup uses a different ID (like ctxtKOKRS, ctxtBUKRS, etc.), and I can adjust that line too.
 
 

@@ -421,3 +421,125 @@ Do you want me to add that auto-switch behavior next?
 
 
 
+****
+
+Gotcha — that
+
+hwnd cannot be intptr.zero or null
+
+error means our UI Automation code couldn’t find the WinActor window at the moment we tried to automate it, so it got a null handle (IntPtr.Zero) instead of a valid one.
+
+That usually happens because:
+
+WinActor takes longer to load than our wait time (Thread.Sleep(5000))
+
+Or the window title we are looking for doesn’t match exactly
+
+Or WinActor has a splash screen before the main window appears
+
+
+
+---
+
+Fix: Make it wait until WinActor’s main window is ready
+
+Instead of hardcoding Thread.Sleep(5000), we can loop until the WinActor window is found, with a timeout.
+
+Here’s the updated RunWinActorScenario with safe waiting:
+
+Imports System.Diagnostics
+Imports System.Threading
+Imports System.Windows.Automation
+
+Public Class Form1
+
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        RunWinActorScenario("C:\Path\To\Scenario1.ums")
+    End Sub
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        RunWinActorScenario("C:\Path\To\Scenario2.ums")
+    End Sub
+
+    Private Sub RunWinActorScenario(scenarioPath As String)
+        Dim winActorPath As String = "C:\Program Files\WinActor\WinActor.exe"
+        Dim winActorTitle As String = "WinActor" ' Adjust if your main window has extra text
+
+        Dim existingProcesses = Process.GetProcessesByName("WinActor")
+        If existingProcesses.Length = 0 Then
+            ' Start WinActor without arguments
+            Process.Start(winActorPath)
+        End If
+
+        ' Wait until the main window is found (max 30 seconds)
+        Dim mainWindow As Process = Nothing
+        Dim sw As Stopwatch = Stopwatch.StartNew()
+
+        Do
+            existingProcesses = Process.GetProcessesByName("WinActor")
+            If existingProcesses.Length > 0 AndAlso existingProcesses(0).MainWindowHandle <> IntPtr.Zero Then
+                mainWindow = existingProcesses(0)
+                Exit Do
+            End If
+            Thread.Sleep(500)
+        Loop While sw.ElapsedMilliseconds < 30000
+
+        If mainWindow Is Nothing Then
+            MessageBox.Show("WinActor main window not found. Please check if the app launched correctly.")
+            Exit Sub
+        End If
+
+        ' Automate: open the scenario file
+        Dim winElement As AutomationElement = AutomationElement.FromHandle(mainWindow.MainWindowHandle)
+        If winElement Is Nothing Then
+            MessageBox.Show("Could not access WinActor UI for automation.")
+            Exit Sub
+        End If
+
+        ' Example: send Ctrl+O to open file
+        My.Computer.Keyboard.SendKeys("^{O}")
+        Thread.Sleep(500)
+
+        ' Type the scenario path
+        My.Computer.Keyboard.SendKeys("""" & scenarioPath & """")
+        Thread.Sleep(500)
+        My.Computer.Keyboard.SendKeys("{ENTER}")
+        Thread.Sleep(1000)
+
+        ' Run the scenario (F5 or menu command)
+        My.Computer.Keyboard.SendKeys("{F5}")
+    End Sub
+
+End Class
+
+
+---
+
+Changes from before:
+
+Wait loop until MainWindowHandle is valid (instead of fixed 5s wait) → fixes the IntPtr.Zero error.
+
+Timeout of 30 seconds → prevents infinite waiting if something’s wrong.
+
+Still works with two buttons for two scenarios.
+
+
+
+---
+
+If you want, I can add an optimization check so that:
+
+If WinActor is already running with the same scenario open, it just re-runs without reloading the file.
+
+If another scenario is open, it loads the new one.
+
+
+That way, it’s even faster and avoids unnecessary reloads.
+
+Do you want me to add that scenario-check optimization next?
+
+
+
+
+
+

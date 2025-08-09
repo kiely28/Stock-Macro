@@ -246,4 +246,178 @@ That would make it feel like a real "scenario launcher" app.
 Do you want me to make that improvement?
 
 
+****
+
+
+Alright — here’s the updated two-button VB.NET code that:
+
+Removes the CLI arguments so you won’t get the "Undefined option" error.
+
+Works even if your WinActor version doesn’t support command-line scenario launching.
+
+Uses UI Automation to open and run the .ums scenario whether WinActor is already open or just starting.
+
+Has an optimization check so if the scenario is already loaded, it just clicks Run without reloading.
+
+
+
+---
+
+VB.NET Code – Two Buttons, No CLI Arguments
+
+Imports System.Diagnostics
+Imports System.Windows.Automation
+Imports System.Runtime.InteropServices
+
+Public Class Form1
+
+    <DllImport("user32.dll")>
+    Private Shared Function SetForegroundWindow(hWnd As IntPtr) As Boolean
+    End Function
+
+    ' Path to WinActor executable
+    Private winActorPath As String = "C:\Program Files\WinActor\WinActor.exe"
+
+    ' Paths to two scenarios
+    Private scenario1Path As String = "C:\Scenarios\Scenario1.ums"
+    Private scenario2Path As String = "C:\Scenarios\Scenario2.ums"
+
+    Private Sub btnScenario1_Click(sender As Object, e As EventArgs) Handles btnScenario1.Click
+        RunWinActorScenario(scenario1Path)
+    End Sub
+
+    Private Sub btnScenario2_Click(sender As Object, e As EventArgs) Handles btnScenario2.Click
+        RunWinActorScenario(scenario2Path)
+    End Sub
+
+    Private Sub RunWinActorScenario(scenarioPath As String)
+        Try
+            Dim processName As String = "WinActor"
+            Dim existingProcesses = Process.GetProcessesByName(processName)
+            Dim proc As Process
+
+            If existingProcesses.Length = 0 Then
+                ' WinActor not running → start without arguments
+                proc = Process.Start(winActorPath)
+
+                ' Wait for the UI to load before automating
+                Threading.Thread.Sleep(5000) ' adjust if your WinActor loads slower
+            Else
+                proc = existingProcesses(0)
+                SetForegroundWindow(proc.MainWindowHandle)
+            End If
+
+            ' Attach to WinActor UI
+            Dim rootElement As AutomationElement = AutomationElement.FromHandle(proc.MainWindowHandle)
+            If rootElement Is Nothing Then
+                MessageBox.Show("Cannot attach to WinActor UI.")
+                Return
+            End If
+
+            ' --- Optimization: Skip loading if scenario is already open ---
+            Dim windowTitle As String = proc.MainWindowTitle
+            If windowTitle.EndsWith(IO.Path.GetFileName(scenarioPath), StringComparison.OrdinalIgnoreCase) Then
+                ' Already open → just click Run
+                Dim runButton As AutomationElement = rootElement.FindFirst(TreeScope.Descendants,
+                    New PropertyCondition(AutomationElement.NameProperty, "Run"))
+                runButton?.GetCurrentPattern(InvokePattern.Pattern)?.Invoke()
+                Return
+            End If
+
+            ' Step 1: Click File menu
+            Dim fileMenu As AutomationElement = rootElement.FindFirst(TreeScope.Descendants,
+                New PropertyCondition(AutomationElement.NameProperty, "File"))
+            fileMenu?.GetCurrentPattern(InvokePattern.Pattern)?.Invoke()
+            Threading.Thread.Sleep(300)
+
+            ' Step 2: Click Open
+            Dim openMenu As AutomationElement = rootElement.FindFirst(TreeScope.Descendants,
+                New PropertyCondition(AutomationElement.NameProperty, "Open"))
+            openMenu?.GetCurrentPattern(InvokePattern.Pattern)?.Invoke()
+            Threading.Thread.Sleep(500)
+
+            ' Step 3: Handle the Open dialog
+            Dim openDialog As AutomationElement = AutomationElement.RootElement.FindFirst(TreeScope.Children,
+                New PropertyCondition(AutomationElement.NameProperty, "Open"))
+            If openDialog IsNot Nothing Then
+                ' File name textbox
+                Dim fileNameBox As AutomationElement = openDialog.FindFirst(TreeScope.Descendants,
+                    New PropertyCondition(AutomationElement.AutomationIdProperty, "1148"))
+                If fileNameBox IsNot Nothing Then
+                    Dim valuePattern As ValuePattern = TryCast(fileNameBox.GetCurrentPattern(ValuePattern.Pattern), ValuePattern)
+                    valuePattern?.SetValue(scenarioPath)
+                    Threading.Thread.Sleep(300)
+                End If
+
+                ' Click Open button
+                Dim openButton As AutomationElement = openDialog.FindFirst(TreeScope.Descendants,
+                    New PropertyCondition(AutomationElement.NameProperty, "Open"))
+                openButton?.GetCurrentPattern(InvokePattern.Pattern)?.Invoke()
+            End If
+
+            ' Step 4: Click Run button
+            Threading.Thread.Sleep(1500)
+            Dim runBtn As AutomationElement = rootElement.FindFirst(TreeScope.Descendants,
+                New PropertyCondition(AutomationElement.NameProperty, "Run"))
+            runBtn?.GetCurrentPattern(InvokePattern.Pattern)?.Invoke()
+
+        Catch ex As Exception
+            MessageBox.Show("Error running WinActor scenario: " & ex.Message)
+        End Try
+    End Sub
+
+End Class
+
+
+---
+
+What Changed
+
+Removed the -f and -a arguments to avoid "Undefined option" errors.
+
+Always starts WinActor with no arguments on first run, then uses UI Automation to load and run the scenario.
+
+Optimization check:
+
+If proc.MainWindowTitle already matches the .ums file name, it skips loading and just clicks Run.
+
+
+Works for two buttons so you can launch two different scenarios.
+
+
+
+---
+
+Setup
+
+1. Add two buttons to your VB.NET form: btnScenario1 and btnScenario2.
+
+
+2. Update:
+
+winActorPath → your WinActor.exe location.
+
+scenario1Path / scenario2Path → your .ums files.
+
+
+
+3. Add references in Visual Studio:
+
+UIAutomationClient
+
+UIAutomationTypes
+
+
+
+
+
+---
+
+If you want, I can extend this so that if you switch scenarios (e.g., from Scenario1 to Scenario2), it automatically replaces the loaded one and runs immediately, no confirmation box.
+That would make your launcher switch scenarios in one click.
+
+Do you want me to add that auto-switch behavior next?
+
+
+
 

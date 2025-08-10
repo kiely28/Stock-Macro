@@ -1,0 +1,169 @@
+Alright — here’s the duplicate-free version of the macro that will only add each email once:
+
+Sub ConcatenateEmails_NoDuplicates()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim emailList As String
+    Dim i As Long
+    Dim dict As Object
+    
+    ' Use dictionary to remove duplicates
+    Set dict = CreateObject("Scripting.Dictionary")
+    
+    Set ws = ThisWorkbook.Sheets(1) ' Change to your sheet name if needed
+    
+    ' Find the last row in column A
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Loop through each cell in column A
+    For i = 1 To lastRow
+        If ws.Cells(i, "A").Value <> "" Then
+            If Not dict.Exists(Trim(ws.Cells(i, "A").Value)) Then
+                dict.Add Trim(ws.Cells(i, "A").Value), True
+            End If
+        End If
+    Next i
+    
+    ' Join all unique emails with semicolon
+    emailList = Join(dict.Keys, ";")
+    
+    ' Output result to G1
+    ws.Range("G1").Value = emailList
+End Sub
+
+What’s new here:
+
+Uses a Scripting.Dictionary to store only unique email addresses.
+
+Trim() is used so that spaces before or after an email don’t cause duplicates.
+
+The final list is created with Join() for efficiency.
+
+
+If you want, I can also make it sort the emails alphabetically before putting them in G1 so it’s cleaner. Would you like me to add that?
+
+*****
+
+Got it — you want a VB.NET Windows Forms app where the text you type into two textboxes (username and password) is saved to an Excel file, specifically in cell C9 (username) and cell C10 (password).
+
+Here’s a simple example using Excel Interop:
+
+Imports Microsoft.Office.Interop
+
+Public Class Form1
+    Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+        Dim excelApp As New Excel.Application
+        Dim workbook As Excel.Workbook = Nothing
+        Dim worksheet As Excel.Worksheet = Nothing
+
+        Try
+            ' Path to your Excel file
+            Dim filePath As String = "D:\coefficient\user_credentials.xlsx"
+
+            ' Open the workbook
+            workbook = excelApp.Workbooks.Open(filePath)
+            worksheet = workbook.Sheets(1)
+
+            ' Write values to C9 and C10
+            worksheet.Range("C9").Value = txtUsername.Text
+            worksheet.Range("C10").Value = txtPassword.Text
+
+            ' Save and close
+            workbook.Save()
+            workbook.Close()
+            excelApp.Quit()
+
+            MessageBox.Show("Saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+        Catch ex As Exception
+            MessageBox.Show("Error: " & ex.Message)
+        Finally
+            ' Release objects
+            If worksheet IsNot Nothing Then Runtime.InteropServices.Marshal.ReleaseComObject(worksheet)
+            If workbook IsNot Nothing Then Runtime.InteropServices.Marshal.ReleaseComObject(workbook)
+            If excelApp IsNot Nothing Then Runtime.InteropServices.Marshal.ReleaseComObject(excelApp)
+        End Try
+    End Sub
+End Class
+
+How it works:
+
+txtUsername and txtPassword are your form’s textboxes.
+
+The program opens your existing Excel file.
+
+It writes the username into cell C9 and password into cell C10.
+
+It then saves and closes the file.
+
+
+> ⚠ Important:
+
+1. You need to add a reference to Microsoft Excel Object Library in your project (Project → Add Reference → COM → "Microsoft Excel xx.x Object Library").
+
+
+2. If the file doesn’t exist, you’ll need a small tweak to create it before writing.
+
+
+
+
+
+Do you want me to make this create the Excel file automatically if it doesn’t exist? That way you don’t need to prepare it first.
+
+*****
+
+Alright, here’s the tweaked version so the file picker:
+
+Starts in your Documents folder
+
+Shows only Excel files (.xlsx, .xls, .xlsm)
+
+Defaults to the last opened folder next time it runs
+
+
+Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+    ' Create OpenFileDialog
+    Dim ofd As New OpenFileDialog()
+    ofd.Title = "Select an Excel File"
+    ofd.Filter = "Excel Files (*.xlsx;*.xls;*.xlsm)|*.xlsx;*.xls;*.xlsm"
+    ofd.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+    ofd.RestoreDirectory = True ' Go back to last opened folder next time
+
+    ' Show dialog and check if user selected a file
+    If ofd.ShowDialog() = DialogResult.OK Then
+        Dim sourceFile As String = ofd.FileName
+        Dim destinationFolder As String = "D:\coefficient"
+
+        ' Create folder if it doesn't exist
+        If Not IO.Directory.Exists(destinationFolder) Then
+            IO.Directory.CreateDirectory(destinationFolder)
+        End If
+
+        ' Destination path
+        Dim destinationFile As String = IO.Path.Combine(destinationFolder, IO.Path.GetFileName(sourceFile))
+
+        ' Copy file (overwrite if exists)
+        IO.File.Copy(sourceFile, destinationFile, True)
+
+        MessageBox.Show("File copied to: " & destinationFile, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+    End If
+End Sub
+
+
+---
+
+Changes made:
+
+ofd.InitialDirectory → starts in My Documents.
+
+ofd.Filter → only Excel files show.
+
+ofd.RestoreDirectory = True → remembers the last folder for the next time the dialog opens.
+
+
+
+---
+
+If you want, I can also make it so after copying, it automatically opens the Excel file from D:\coefficient so you can confirm it’s there.
+Do you want me to add that?
+

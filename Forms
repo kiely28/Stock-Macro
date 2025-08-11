@@ -539,6 +539,132 @@ That way, it’s even faster and avoids unnecessary reloads.
 Do you want me to add that scenario-check optimization next?
 
 
+***
+
+
+Gotcha — you want the VB.NET form to wait until the WinActor scenario finishes running,
+then show a MessageBox saying it’s finished.
+
+
+---
+
+Since WinActor doesn’t have a built-in “execution finished” event we can hook into,
+we can simulate it by monitoring the WinActor main window title:
+
+While a scenario is running, WinActor’s title usually contains something like [Running] or the execution icon changes.
+
+When execution ends, the title goes back to just the scenario name.
+
+
+We can poll this in a background loop until it changes back, then show a confirmation.
+
+
+---
+
+Updated OpenScenario With Execution Finish Message
+
+Private Sub OpenScenario(scenarioPath As String)
+    Dim processName As String = "wa7"
+
+    If Not File.Exists(scenarioPath) Then
+        MessageBox.Show($"Scenario file not found: {scenarioPath}")
+        Exit Sub
+    End If
+
+    ' Get or start WinActor
+    Dim winActorProcess As Process() = Process.GetProcessesByName(processName)
+    If winActorProcess.Length = 0 Then
+        Process.Start("C:\Path\To\WinActor.exe")
+        Threading.Thread.Sleep(5000)
+        winActorProcess = Process.GetProcessesByName(processName)
+    End If
+
+    If winActorProcess.Length = 0 Then
+        MessageBox.Show("WinActor not running.")
+        Exit Sub
+    End If
+
+    ' Focus WinActor
+    SetForegroundWindow(winActorProcess(0).MainWindowHandle)
+    Threading.Thread.Sleep(500)
+
+    ' If any scenario is open, close it
+    If winActorProcess(0).MainWindowTitle.Contains(".ums") OrElse winActorProcess(0).MainWindowTitle.Contains(".ums7") Then
+        CloseCurrentScenario(winActorProcess(0).MainWindowHandle)
+    End If
+
+    ' Try Ctrl+O
+    Dim oldTitle = winActorProcess(0).MainWindowTitle
+    SendKeys.SendWait("^{o}")
+    Threading.Thread.Sleep(1000)
+
+    ' If Ctrl+O didn’t work, use File→Open
+    If winActorProcess(0).MainWindowTitle = oldTitle Then
+        ClickMenuItem(winActorProcess(0).MainWindowHandle, "File", "Open")
+    End If
+
+    ' Type scenario path
+    SendKeys.SendWait(scenarioPath)
+    Threading.Thread.Sleep(500)
+    SendKeys.SendWait("{ENTER}")
+    Threading.Thread.Sleep(2000)
+
+    ' Start execution (F5 key in WinActor)
+    SendKeys.SendWait("{F5}")
+    Threading.Thread.Sleep(1000)
+
+    ' Wait for execution to finish
+    WaitForExecutionFinish(winActorProcess(0))
+
+    ' Show confirmation
+    MessageBox.Show($"{Path.GetFileName(scenarioPath)} execution finished.")
+End Sub
+
+Private Sub WaitForExecutionFinish(proc As Process)
+    Dim prevTitle As String = ""
+    Dim stillRunning As Boolean = True
+
+    While stillRunning
+        Threading.Thread.Sleep(1000) ' check every second
+        Try
+            Dim currentTitle = proc.MainWindowTitle
+            ' Running scenarios in WinActor 7 usually show [Running] in the title
+            If Not currentTitle.Contains("[Running]") Then
+                stillRunning = False
+            End If
+        Catch
+            stillRunning = False
+        End Try
+    End While
+End Sub
+
+
+---
+
+How it works:
+
+1. After opening the scenario, the code sends F5 to start execution.
+
+
+2. While execution is running, the window title contains [Running].
+
+
+3. It keeps checking the title every second until [Running] disappears.
+
+
+4. When finished → shows a MessageBox confirming completion.
+
+
+
+
+---
+
+Question for you:
+Does your WinActor always show [Running] in the title bar during execution?
+If not, I can instead detect execution by checking if the Start button is disabled and re-enabled via UI Automation. That would work even if the title doesn’t change.
+
+
+
 
 
 

@@ -1,0 +1,139 @@
+Here’s a clean “before vs. after” write‑up you can drop into a plan or SOP.
+
+Before (As‑Is) – Step‑by‑step
+
+1. 1st report — manual download & total
+
+Run SAP t‑code → export to Excel.
+
+Clean/format columns (dates, numbers).
+
+Compute Total Value with formulas.
+
+Save as Report1_<date>.xlsx.
+
+
+
+2. 2nd report — pivot & template
+
+Load raw data to a PivotTable.
+
+Build required fields/measures.
+
+Copy Pivot output into the Report 2 Template (fixed cells/ranges).
+
+Save and email/upload as needed.
+
+
+
+3. 3rd report — pivot by Section In‑Charge & template
+
+Create a Pivot grouped by Section In‑Charge.
+
+Filter/format per section.
+
+Paste results into the Report 3 Template.
+
+Save and distribute.
+
+
+
+4. Follow‑up detail (driven by 2nd report)
+
+From Pivot in step 2, get the list of items/keys that need detail.
+
+Go back to SAP → download detail data.
+
+Pivot/shape the detail.
+
+Paste into the Detail Template and save.
+
+
+
+
+Pain points: multiple manual exports, repetitive formatting, copy‑paste into templates, risk of mismatched columns and formulas.
+
+
+---
+
+After (To‑Be) – Step‑by‑step (simple & reliable)
+
+Goal: Keep your same four outputs, but drive them from one “Master Workbook” with standardized SAP exports and one‑click refresh.
+
+Prereqs (one‑time setup):
+
+Standardize SAP exports to CSV with fixed column order & names (e.g., drop into \\Shared\SAP_Exports\YYYYMMDD\).
+
+Build a Master Workbook with:
+
+Power Query to import all SAP CSVs.
+
+Three PivotTables (Report 2, Report 3 by Section, Detail).
+
+Named ranges that map directly to each Template sheet.
+
+
+Add two buttons (simple macros):
+
+Load/Refresh Data (refreshes all queries & pivots).
+
+Fill Templates & Save (copies values into templates and saves files with date/time stamps).
+
+
+
+Daily run:
+
+1. Drop files: Export the 1st SAP report (and any others needed) to the standard folder. No manual formatting.
+
+
+2. Refresh: Open the Master Workbook → click Load/Refresh Data.
+
+Power Query cleans types/headers.
+
+Pivot for Total Value updates automatically (covers step 1’s total).
+
+
+
+3. Report 2 (Pivot → Template): The Pivot for Report 2 is already wired to the template range.
+
+
+4. Report 3 (Pivot by Section In‑Charge → Template): The section Pivot updates on refresh; template pulls from named ranges.
+
+
+5. Detail (from Report 2 keys):
+
+If detail keys are in Report 2 output, a query filters the keys list and (option A) merges with a pre‑exported SAP detail file, or (option B) uses a secondary CSV export you drop in the folder.
+
+The Detail Pivot updates on refresh and the template fills automatically.
+
+
+
+6. Export: Click Fill Templates & Save to write out:
+
+Report1_TotalValue_<date>.xlsx
+
+Report2_Summary_<date>.xlsx
+
+Report3_Section_<date>.xlsx
+
+Report4_Detail_<date>.xlsx (Optionally also auto‑export PDFs.)
+
+
+
+
+Benefits: no manual formatting, no copy‑paste into templates, consistent totals and pivots, repeatable with two clicks.
+
+
+---
+
+Deliverables/Artifacts
+
+Master Workbook (Power Query + 3 Pivots + Template sheets).
+
+Templates: Report 2, Report 3 (Section In‑Charge), Detail.
+
+Folder & file naming standard for SAP exports.
+
+
+If you want, I can sketch the Master Workbook structure (sheets, named ranges, and the two short macros) tailored to the exact fields you have.
+

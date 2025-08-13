@@ -137,3 +137,102 @@ Folder & file naming standard for SAP exports.
 
 If you want, I can sketch the Master Workbook structure (sheets, named ranges, and the two short macros) tailored to the exact fields you have.
 
+
+
+Update - 081425
+Got it — here’s your Before and After scenario rewritten with the new Excel VBA automation process.
+
+
+---
+
+Before Scenario – Manual Process
+
+1. 1st report – Manual download & total
+
+Download from SAP → export to Excel.
+
+Manually format columns.
+
+Compute Total Value in Excel.
+
+
+
+2. 2nd report – Pivot & template
+
+Create a PivotTable from raw data.
+
+Copy pivot results into the Report 2 template.
+
+
+
+3. 3rd report – Pivot by Section In-Charge
+
+Create a PivotTable grouped by Section In-Charge.
+
+Paste results into the Report 3 template.
+
+
+
+4. 4th report – From 2nd report keys → SAP detail
+
+Get keys/items from Report 2 pivot.
+
+Download related detail from SAP.
+
+Create PivotTable, then paste into the Detail template.
+
+
+
+
+Drawbacks:
+
+Multiple manual downloads and formatting steps.
+
+Repetitive copy-paste into templates.
+
+Higher risk of errors and inconsistencies.
+
+
+
+---
+
+After Scenario – Automated via Excel VBA Macro
+
+1. Open macro-enabled Excel file (contains all automation scripts).
+
+
+2. Click “Generate Reports” button for each required report.
+
+
+3. Macro process:
+
+Import raw SAP exports automatically.
+
+Apply standard formatting (headers, column widths, number formats).
+
+Generate required PivotTables for each report.
+
+Copy results directly into the correct report template.
+
+
+
+4. Done — all reports are ready for review or distribution with a single click.
+
+
+
+Benefits:
+
+Cuts processing time from hours to minutes.
+
+Eliminates repetitive manual formatting and copy-paste.
+
+Ensures consistent structure and accuracy across all reports.
+
+
+
+---
+
+If you want, I can also create a side-by-side table so the before/after differences are easier to see at a glance. That would make it perfect for a presentation or management approval.
+
+
+

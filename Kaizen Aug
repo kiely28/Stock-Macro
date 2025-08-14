@@ -235,4 +235,14 @@ Ensures consistent structure and accuracy across all reports.
 If you want, I can also create a side-by-side table so the before/after differences are easier to see at a glance. That would make it perfect for a presentation or management approval.
 
 
+*****
+
+Here’s the short version:
+
+Before: Reports were prepared manually by downloading from SAP, formatting in Excel, creating pivots, and pasting into templates.
+
+After: Reports are generated automatically by clicking a button in an Excel VBA macro file, which formats and fills templates instantly.
+
+Purpose: To save time, reduce manual effort, and ensure consistent, error-free report generation.
+
 

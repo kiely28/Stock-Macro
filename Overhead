@@ -834,3 +834,109 @@ popupExists = Not session.findById("wnd[1]", False) Is Nothing is a safe way to 
 Let me know if your popup uses a different ID (like ctxtKOKRS, ctxtBUKRS, etc.), and I can adjust that line too.
 
 
+Update 08/14/25
+' Windows API declarations
+Declare PtrSafe Function FindWindow Lib "user32" Alias "FindWindowA" (ByVal lpClassName As String, ByVal lpWindowName As String) As LongPtr
+Declare PtrSafe Function SetForegroundWindow Lib "user32" (ByVal hwnd As LongPtr) As Long
+Declare PtrSafe Sub keybd_event Lib "user32" (ByVal bVk As Byte, ByVal bScan As Byte, ByVal dwFlags As Long, ByVal dwExtraInfo As Long)
+
+Sub ProoflistSALR() 'PasteOHKey_Screenshot_SaveToProofList()
+    Dim SapGuiAuto As Object, sapApp As Object, sapCon As Object, session As Object
+    Dim ws As Worksheet, wbProof As Workbook, shtProof As Worksheet
+    Dim i As Long, ohKeyValue As String
+
+    ' Reference to source sheet
+    Set ws = ThisWorkbook.Sheets("Sheet2")
+    ' Create new workbook for screenshots
+    Set wbProof = Workbooks.Add
+
+    ' Connect to SAP GUI
+    On Error Resume Next
+    Set SapGuiAuto = GetObject("SAPGUI")
+    If SapGuiAuto Is Nothing Then MsgBox "SAP GUI is not running.": Exit Sub
+    Set sapApp = SapGuiAuto.GetScriptingEngine
+    Set sapCon = sapApp.Children(0)
+    Set session = sapCon.Children(0)
+    On Error GoTo 0
+
+    If session Is Nothing Then MsgBox "No active SAP session found.": Exit Sub
+
+    ' Loop through OH Key values
+    For i = 2 To 8
+        ohKeyValue = Trim(ws.Cells(i, 3).Value)
+        If ohKeyValue <> "" Then
+            ' SAP interaction
+            session.findById("wnd[0]").maximize ' Additional
+            session.findById("wnd[0]/usr/btnVIM_POSI_PUSH").press
+            session.findById("wnd[1]/usr/sub:SAPLSPO4:0300/ctxtSVALD-VALUE[0,21]").Text = ohKeyValue
+            session.findById("wnd[1]/usr/sub:SAPLSPO4:0300/ctxtSVALD-VALUE[0,21]").caretPosition = 4
+            session.findById("wnd[1]/tbar[0]/btn[0]").press
+            session.findById("wnd[0]/usr/tblSAPL0COETCTRL_V_T685_CO2").Rows(0).Selected = True
+            session.findById("wnd[0]/shellcont/shell").selectItem "02", "Column1"
+            session.findById("wnd[0]/shellcont/shell").ensureVisibleHorizontalItem "02", "Column1"
+            session.findById("wnd[0]/shellcont/shell").doubleClickItem "02", "Column1"
+            Application.Wait Now + TimeValue("0:00:01")
+
+            ' Capture SAP window screenshot
+            CaptureSAPWindowToSheet wbProof, ohKeyValue
+
+            Application.Wait Now + TimeValue("0:00:02")
+            session.findById("wnd[0]/tbar[0]/btn[3]").press ' Back
+        End If
+    Next i
+
+    ' Clean up default sheet
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    wbProof.Sheets("Sheet1").Delete
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+
+'    ' Save workbook
+'    wbProof.SaveAs fileName:="D:\prooflist.xlsx", FileFormat:=xlOpenXMLWorkbook
+'    wbProof.Close SaveChanges:=False
+'
+'    MsgBox "Proof list created and saved to D:\prooflist.xlsx"
+
+
+    prooflistpath = "D:\Coefficient\Prooflist\Prooflist S_ALR_87008275.xlsx"
+    Application.DisplayAlerts = False
+    wbProof.SaveAs fileName:=prooflistpath, FileFormat:=xlOpenXMLWorkbook
+    Application.DisplayAlerts = True
+    'wbProof.Close SaveChanges:=False
+
+    'MsgBox "Prooflist created and saved to: " & prooflistpath
+End Sub
+
+Sub CaptureSAPWindowToSheet(wb As Workbook, sheetName As String)
+    Dim hwnd As LongPtr
+    Dim sht As Worksheet
+
+    ' Find SAP window by class name
+    hwnd = FindWindow("SAP_FRONTEND_SESSION", vbNullString)
+    If hwnd = 0 Then
+        MsgBox "SAP window not found."
+        Exit Sub
+    End If
+
+    ' Bring SAP window to foreground
+    SetForegroundWindow hwnd
+    Application.Wait Now + TimeValue("0:00:01")
+
+    ' Create new sheet
+    Set sht = wb.Sheets.Add(After:=wb.Sheets(wb.Sheets.Count))
+    On Error Resume Next
+    sht.Name = Left(sheetName, 31)
+    On Error GoTo 0
+
+    ' Simulate Alt + PrintScreen
+    keybd_event &H12, 0, 0, 0 ' Alt down
+    keybd_event &H2C, 0, 0, 0 ' PrintScreen down
+    keybd_event &H2C, 0, 2, 0 ' PrintScreen up
+    keybd_event &H12, 0, 2, 0 ' Alt up
+
+    Application.Wait Now + TimeValue("0:00:01")
+    sht.Activate
+    sht.Range("A1").Select
+    sht.Paste
+End Sub

@@ -866,5 +866,92 @@ To add timestamps or watermark on screenshots
 To support dynamic SAP window titles
 
 
+Update 08/14/25
+
+Got it — here’s your combined version that:
+
+Brings SAP to the front (like before)
+
+Takes a full-screen screenshot including the taskbar
+
+Waits for the clipboard to update so you don’t paste an old image
+
+Pastes it into a new sheet in your proof list workbook
+
+
+
+---
+
+Updated CaptureSAPWindowToSheet
+
+Sub CaptureSAPWindowToSheet(wb As Workbook, sheetName As String)
+    Dim hwnd As LongPtr
+    Dim sht As Worksheet
+
+    ' Find SAP window by class name
+    hwnd = FindWindow("SAP_FRONTEND_SESSION", vbNullString)
+    If hwnd = 0 Then
+        MsgBox "SAP window not found."
+        Exit Sub
+    End If
+
+    ' Bring SAP window to foreground
+    SetForegroundWindow hwnd
+    Application.Wait Now + TimeValue("0:00:01")
+
+    ' Clear clipboard to avoid old image paste
+    Application.CutCopyMode = False
+    Application.SendKeys "^c" ' Quick copy to reset
+    DoEvents
+    Application.Wait Now + TimeValue("0:00:01")
+
+    ' Simulate full-screen PrintScreen (includes taskbar)
+    keybd_event &H2C, 0, 0, 0 ' PrintScreen down
+    keybd_event &H2C, 0, 2, 0 ' PrintScreen up
+
+    ' Wait for clipboard to receive new image
+    Application.Wait Now + TimeValue("0:00:01")
+
+    ' Create new sheet in proof workbook
+    Set sht = wb.Sheets.Add(After:=wb.Sheets(wb.Sheets.Count))
+    On Error Resume Next
+    sht.Name = Left(sheetName, 31)
+    On Error GoTo 0
+
+    ' Paste screenshot into sheet
+    sht.Range("A1").Select
+    sht.Paste
+End Sub
+
+
+---
+
+How it works now
+
+1. FindWindow + SetForegroundWindow → Brings SAP up front so it’s visible in the screenshot.
+
+
+2. Clears clipboard → Avoids pasting last screenshot or unrelated copied data.
+
+
+3. PrintScreen without Alt → Captures entire screen including taskbar.
+
+
+4. Small wait → Gives Windows time to place the image in the clipboard.
+
+
+5. Creates a new sheet named after the OH Key and pastes the screenshot.
+
+
+
+
+---
+
+If you run this in your current ProoflistSALR, every SAP screenshot will now have the taskbar included.
+
+Do you want me to also tweak it so multiple monitors are handled correctly and only the main monitor + taskbar is captured? That’s a bit trickier but possible.
+
+
+
 
 

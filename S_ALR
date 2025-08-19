@@ -951,6 +951,68 @@ If you run this in your current ProoflistSALR, every SAP screenshot will now hav
 
 Do you want me to also tweak it so multiple monitors are handled correctly and only the main monitor + taskbar is captured? That’s a bit trickier but possible.
 
+08/20/25 - Update
+
+Got it 👍
+You want a VBA macro that checks whether the values in your cells (C9 = 4, C10 = 6, C12 = 2025) match with the text in your template cells (D8 = "Apr 2025", F8 = "Jun 2025").
+
+Here’s a simple way:
+
+Sub CheckMonthYearMatch()
+
+    Dim m1 As Integer, m2 As Integer, yr As Integer
+    Dim check1 As String, check2 As String
+    Dim result As String
+    
+    ' Get month numbers and year from C9, C10, C12
+    m1 = Range("C9").Value
+    m2 = Range("C10").Value
+    yr = Range("C12").Value
+    
+    ' Convert them into "Mmm YYYY" format
+    check1 = Format(DateSerial(yr, m1, 1), "mmm yyyy")
+    check2 = Format(DateSerial(yr, m2, 1), "mmm yyyy")
+    
+    ' Compare with template cells
+    If UCase(Range("D8").Value) = UCase(check1) Then
+        result = "D8 matches (" & check1 & ")"
+    Else
+        result = "D8 does NOT match. Expected: " & check1
+    End If
+    
+    If UCase(Range("F8").Value) = UCase(check2) Then
+        result = result & vbCrLf & "F8 matches (" & check2 & ")"
+    Else
+        result = result & vbCrLf & "F8 does NOT match. Expected: " & check2
+    End If
+    
+    MsgBox result, vbInformation, "Check Result"
+
+End Sub
+
+🔎 How it works:
+
+DateSerial(yr, m1, 1) makes a valid date from year + month.
+
+Format(..., "mmm yyyy") converts it into "Apr 2025", "Jun 2025", etc.
+
+Then it compares with your template cells.
+
+
+So if:
+
+C9=4, C10=6, C12=2025
+
+D8="Apr 2025", F8="Jun 2025"
+
+
+👉 the macro will confirm they match.
+
+
+---
+
+Do you want the macro to just show a message (like above), or should it highlight the cell in red if it doesn’t match?
+
 
 
 

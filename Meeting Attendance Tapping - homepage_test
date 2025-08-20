@@ -1,0 +1,161 @@
+Got it 👍 Since you’re working with ASP.NET Web Forms (ASPX), I’ll draft a sample after-login.aspx page that contains:
+
+A Bootstrap navbar with Meeting List and Manage Role links.
+
+A Dashboard section with 4 cards showing:
+
+Total Meeting
+
+Upcoming Meeting
+
+Missed Meeting
+
+History
+
+
+
+Here’s a clean working example (Bootstrap 5):
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="after-login.aspx.cs" Inherits="YourNamespace.after_login" %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <form id="form1" runat="server">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Meeting Dashboard</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="MeetingList.aspx">Meeting List</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="ManageRole.aspx">Manage Role</a>
+                        </li>
+                        <li class="nav-item">
+                            <asp:LinkButton ID="btnLogout" runat="server" CssClass="nav-link" OnClick="btnLogout_Click">Logout</asp:LinkButton>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Content -->
+        <div class="container my-5">
+            <h2 class="mb-4">Dashboard</h2>
+            <div class="row g-4">
+                <!-- Total Meeting -->
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm border-0">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Meeting</h5>
+                            <h2 class="text-primary">
+                                <asp:Label ID="lblTotalMeeting" runat="server" Text="0"></asp:Label>
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Meeting -->
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm border-0">
+                        <div class="card-body">
+                            <h5 class="card-title">Upcoming</h5>
+                            <h2 class="text-success">
+                                <asp:Label ID="lblUpcoming" runat="server" Text="0"></asp:Label>
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Missed Meeting -->
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm border-0">
+                        <div class="card-body">
+                            <h5 class="card-title">Missed</h5>
+                            <h2 class="text-danger">
+                                <asp:Label ID="lblMissed" runat="server" Text="0"></asp:Label>
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History -->
+                <div class="col-md-3">
+                    <div class="card text-center shadow-sm border-0">
+                        <div class="card-body">
+                            <h5 class="card-title">History</h5>
+                            <h2 class="text-secondary">
+                                <asp:Label ID="lblHistory" runat="server" Text="0"></asp:Label>
+                            </h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+---
+
+Code-behind (after-login.aspx.cs)
+
+You can set the card values after fetching them from your database:
+
+using System;
+using System.Data.SqlClient;
+
+namespace YourNamespace
+{
+    public partial class after_login : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                LoadDashboardData();
+            }
+        }
+
+        private void LoadDashboardData()
+        {
+            // Example only: replace with actual DB logic
+            lblTotalMeeting.Text = "15";
+            lblUpcoming.Text = "3";
+            lblMissed.Text = "2";
+            lblHistory.Text = "10";
+        }
+
+        protected void btnLogout_Click(object sender, EventArgs e)
+        {
+            Session.Abandon();
+            Response.Redirect("login.aspx");
+        }
+    }
+}
+
+
+---
+
+👉 Do you want me to also connect these counts (Total, Upcoming, Missed, History) directly to your SQL stored procedures for real-time data?
+

@@ -1,0 +1,26 @@
+Background:
+  Currently, the GNS+ Application Form retrieves employee details directly from NAMES. When section in-charges from other departments submit request for updates, mismatches in GNS+ User ID are often overlooked due to auto-populated fields. 			
+  This results in incorrect entries, especially for employees who initially used the “PH” format (no APO account during requisition) but have recently created their APO accounts.
+
+Conclusion and Judgement:
+  To ensure data consistency and prevent incorrect GNS+ User IDs, the system should validate information against Tbl_Authority before retrieving details from NAMES.
+
+Target:
+  To ensure data consistency and prevent incorrect GNS+ User IDs, the system should validate information against Tbl_Authority before retrieving details from NAMES.
+
+Proposal Details:
+  This aims to improve the accuracy of employee information in the GNS+ Application Form by updating its data validation process. Currently, the system retrieves records directly from NAMES, which often results in mismatched or incorrect GNS+ User IDs, especially for employees using the “PH” format.
+  The proposed change is to first check and validate employee information in Tbl_Authority before pulling details from NAMES. This adjustment will prevent overwriting valid GNS+ User IDs and ensure that accounts are reflected correctly.
+
+Expectation of Activity:
+Improve accuracy of GNS+ User IDs.
+
+Minimize errors caused by auto-populated fields.
+
+Ensure consistency of records with official data in Tbl_Authority.
+
+Provide smoother request handling for departments.
+
+
+
+

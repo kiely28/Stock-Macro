@@ -23,4 +23,59 @@ Provide smoother request handling for departments.
 
 
 
+--- 
+
+Your proposal is already clear and well-structured — it has a solid flow from background to expected outcomes. 👍
+Below is a refined version that keeps your ideas intact but improves readability, grammar, and professional tone, suitable for submission or presentation in a small activity plan or system improvement proposal.
+
+
+---
+
+Proposal: Validation Enhancement for GNS+ Application Form
+
+Background:
+Currently, the GNS+ Application Form retrieves employee details directly from NAMES. When section in-charges from other departments submit update requests, mismatches in GNS+ User IDs are often overlooked due to the form’s auto-populated fields.
+This results in incorrect entries—particularly for employees who initially used the “PH” format (no APO account during requisition) but have since created their APO accounts.
+
+
+---
+
+Conclusion and Judgement:
+To ensure data consistency and prevent incorrect GNS+ User IDs, the system should validate employee information against Tbl_Authority before retrieving details from NAMES.
+
+
+---
+
+Target:
+Ensure data consistency and accuracy of GNS+ User IDs by performing validation against Tbl_Authority prior to data retrieval from NAMES.
+
+
+---
+
+Proposal Details:
+This proposal aims to enhance the accuracy of employee information in the GNS+ Application Form by improving its data validation process.
+At present, the system retrieves records directly from NAMES, which can cause mismatched or incorrect GNS+ User IDs, especially for employees with “PH” format accounts.
+
+The proposed enhancement introduces a validation step where the system will first check employee details in Tbl_Authority. Only after successful validation will it retrieve data from NAMES.
+This process will prevent overwriting valid GNS+ User IDs and ensure that employee accounts are accurately reflected.
+
+
+---
+
+Expected Outcome / Expectation of Activity:
+
+Improve the accuracy of GNS+ User IDs.
+
+Minimize errors caused by auto-populated fields.
+
+Ensure record consistency with official data in Tbl_Authority.
+
+Streamline request handling for department users.
+
+
+
+---
+
+Would you like me to format it in a one-page proposal layout (with headers like Objective, Scope, Expected Benefits, Implementation Plan) for easier submission to management or documentation?
+
 

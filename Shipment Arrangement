@@ -198,3 +198,41 @@ Best regards,
 ---
 
 Would you like me to add one more line summarizing the purpose (e.g., “This helps ensure accurate data transfer”)?
+
+
+---
+
+Here’s your message formatted nicely as a clear and simple email:
+
+
+---
+
+Subject: Macro Function Explanation
+
+Hello Ma’am,
+Good day!
+
+Please see below a short explanation of what the macro does:
+
+This macro copies specific data from another Excel file (Trial_Blume.xlsx) into your current workbook’s sheet (REV11_Row data) based on a matching value.
+
+It works as follows:
+
+1. Searches for a value from column AI in your current workbook (REV11_Row data).
+
+
+2. Finds the same value in column E of the “Row Data” sheet in Trial_Blume.xlsx.
+
+
+3. Based on the data in columns S and T of the source sheet, it copies and splits the information intelligently into columns AM and AN of your current workbook.
+
+
+
+Thank you!
+Best regards,
+[Your Name]
+
+
+---
+
+Would you like me to combine this with your previous note about the new sub macroH in one email?

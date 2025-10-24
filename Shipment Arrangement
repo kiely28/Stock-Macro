@@ -33,3 +33,137 @@
     Set WsTenkiMoto = Nothing
     Set WsTenkiSaki = Nothing
     Set WbTenkiMoto = Nothing
+
+
+----
+
+
+Perfect 👌 that’s a really important clarification.
+
+Your example shows that both columns S and T can have two comma-separated values, like:
+
+S: ABC, EFG
+
+T: 123, 456
+
+
+And your goal is:
+
+The first part before the comma in both (ABC and 123) → combined into column AM
+
+The second part after the comma in both (EFG and 456) → combined into column AN
+
+If S has no comma, then just combine S + T into AM, and set AN = "DIRECT"
+
+
+Let’s update your VBA code properly for that scenario.
+
+
+---
+
+✅ Final Correct Version (Handles Commas in Both S and T)
+
+Sub CopyDataFromTrialBlume()
+
+    Dim WbTenkiMoto As Workbook
+    Dim WsTenkiMoto As Worksheet
+    Dim WsTenkiSaki As Worksheet
+    Dim SearchValue As String
+    Dim FindRng As Range
+    Dim i As Long, lastRow As Long
+    Dim SourceValueS As String
+    Dim SourceValueT As String
+    Dim S_Before As String, S_After As String
+    Dim T_Before As String, T_After As String
+    Dim CommaPosS As Long, CommaPosT As Long
+
+    '--- Open source workbook ---
+    Set WbTenkiMoto = Workbooks.Open("D:\Trial_Blume.xlsx")
+    Set WsTenkiMoto = WbTenkiMoto.Worksheets("Row Data")
+    Set WsTenkiSaki = ThisWorkbook.Worksheets("REV11_Row data")
+
+    '--- Get last used row in destination sheet ---
+    lastRow = WsTenkiSaki.Cells(Rows.Count, "A").End(xlUp).Row
+
+    '--- Loop through each row from 14 to last row ---
+    For i = 14 To lastRow
+        
+        SearchValue = Trim(WsTenkiSaki.Cells(i, "AI").Value)
+        
+        ' Find the value in column E of source sheet
+        Set FindRng = WsTenkiMoto.Columns("E").Find(SearchValue, LookAt:=xlPart)
+        
+        If Not FindRng Is Nothing Then
+            
+            ' Get values from source columns S and T
+            SourceValueS = Trim(WsTenkiMoto.Cells(FindRng.Row, "S").Value)
+            SourceValueT = Trim(WsTenkiMoto.Cells(FindRng.Row, "T").Value)
+            
+            ' Find commas in both columns
+            CommaPosS = InStr(1, SourceValueS, ",")
+            CommaPosT = InStr(1, SourceValueT, ",")
+            
+            If CommaPosS = 0 Then
+                ' --- No comma in S ---
+                WsTenkiSaki.Cells(i, "AM").Value = SourceValueS & " " & SourceValueT
+                WsTenkiSaki.Cells(i, "AN").Value = "DIRECT"
+            
+            Else
+                ' --- Has comma in S (and likely in T) ---
+                
+                ' Split values before/after comma in S
+                S_Before = Trim(Left(SourceValueS, CommaPosS - 1))
+                S_After = Trim(Mid(SourceValueS, CommaPosS + 1))
+                
+                ' Split values before/after comma in T
+                If CommaPosT > 0 Then
+                    T_Before = Trim(Left(SourceValueT, CommaPosT - 1))
+                    T_After = Trim(Mid(SourceValueT, CommaPosT + 1))
+                Else
+                    ' If T has no comma, use same T for both
+                    T_Before = SourceValueT
+                    T_After = SourceValueT
+                End If
+                
+                ' Combine the pairs
+                WsTenkiSaki.Cells(i, "AM").Value = S_Before & " " & T_Before
+                WsTenkiSaki.Cells(i, "AN").Value = S_After & " " & T_After
+            End If
+        
+        Else
+            ' --- Not found ---
+            With WsTenkiSaki.Cells(i, "AM").Interior
+                .Pattern = xlSolid
+                .Color = RGB(255, 0, 0)
+            End With
+        End If
+        
+    Next i
+
+    '--- Cleanup and close workbook ---
+    WbTenkiMoto.Close SaveChanges:=False
+    Set FindRng = Nothing
+    Set WsTenkiMoto = Nothing
+    Set WsTenkiSaki = Nothing
+    Set WbTenkiMoto = Nothing
+
+    MsgBox "Data transfer completed successfully.", vbInformation
+
+End Sub
+
+
+---
+
+🧠 Example Results
+
+Source Column S	Source Column T	Output AM	Output AN
+
+ABC	123	ABC 123	DIRECT
+ABC, EFG	123, 456	ABC 123	EFG 456
+ABC, EFG	123	ABC 123	EFG 123
+
+
+
+---
+
+Would you like me to make the separator between the two combined values (ABC 123) a dash (-) or slash (/) instead of a space, to make it visually clearer?

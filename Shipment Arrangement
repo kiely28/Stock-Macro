@@ -167,3 +167,34 @@ ABC, EFG	123	ABC 123	EFG 123
 ---
 
 Would you like me to make the separator between the two combined values (ABC 123) a dash (-) or slash (/) instead of a space, to make it visually clearer?
+
+
+
+----
+
+
+Here’s a cleaned-up and slightly polished version of your email — still simple and natural:
+
+
+---
+
+Subject: Updated Macro File
+
+Hello Ma’am,
+Good day!
+
+Please see my attached macro file for your review:
+
+Added a new sub macroH to check if the data in column S has a comma.
+
+Updated the code to handle values with commas by splitting and saving them properly in columns AM and AN.
+
+
+Thank you!
+Best regards,
+[Your Name]
+
+
+---
+
+Would you like me to add one more line summarizing the purpose (e.g., “This helps ensure accurate data transfer”)?

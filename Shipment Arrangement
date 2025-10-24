@@ -1,0 +1,35 @@
+    Dim WbTenkiMoto As Workbook
+    Dim WsTenkiMoto As Worksheet
+    Dim WsTenkiSaki As Worksheet
+    Dim SearchValue As String
+    Dim FindRng As Range
+    Dim i As Long, lastRow As Long
+
+
+    Set WbTenkiMoto = Workbooks.Open("D:\Trial_Blume.xlsx")
+
+    Set WsTenkiMoto = WbTenkiMoto.Worksheets("Row Data")
+    Set WsTenkiSaki = ThisWorkbook.Worksheets("REV11_Row data")
+
+    lastRow = WsTenkiSaki.Cells(Rows.Count, "A").End(xlUp).Row
+
+    For i = 14 To lastRow
+        
+        SearchValue = WsTenkiSaki.Cells(i, "AI").Value
+        
+
+        Set FindRng = WsTenkiMoto.Columns("E").Find(SearchValue, LookAt:=xlPart)
+        
+
+        If Not FindRng Is Nothing Then
+            WsTenkiSaki.Cells(i, "AM").Value = WsTenkiMoto.Cells(FindRng.Row, "S").Value  
+        Else
+            WsTenkiSaki.Cells(i, "AM").Interior.Color = 0  
+        End If
+        
+    Next i
+
+    Set FindRng = Nothing
+    Set WsTenkiMoto = Nothing
+    Set WsTenkiSaki = Nothing
+    Set WbTenkiMoto = Nothing
